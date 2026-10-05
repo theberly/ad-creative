@@ -52,6 +52,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .audrow .audCnt{width:56px;padding:6px;border:1px solid var(--line);border-radius:6px;font:inherit}
 button.small{padding:5px 12px;font-size:14px}
 button.x{padding:4px 10px}
+.keyrow{display:flex;gap:8px}
+#clientInfo{margin-top:12px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+#clientInfo a{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -64,11 +67,7 @@ button.x{padding:4px 10px}
 <h2><span class="n">1</span>客戶與需求類型</h2>
 <div class="grid2">
 <div><label class="f" for="client">客戶</label>
-<select id="client">
-<option value="">請選擇</option>
-<option value="創創">創創（示範資料）</option>
-<option value="__new">＋ 新客戶</option>
-</select></div>
+<select id="client"><option value="">載入中…</option></select></div>
 <div><label class="f" for="mode">需求類型</label>
 <select id="mode">
 <option value="全新文案">全新文案</option>
@@ -76,6 +75,9 @@ button.x{padding:4px 10px}
 <option value="改寫既有文案">改寫既有文案</option>
 </select></div>
 </div>
+<div id="keyBox" class="hidden"><label class="f" for="keyInput">通行碼（第一次使用需輸入，向 Keani 索取）</label><div class="keyrow"><input type="text" id="keyInput"><button type="button" class="ghost small" id="keyBtn">確認</button></div><p class="note" id="keyMsg"></p></div>
+<div id="clientInfo" class="hidden"></div>
+<div id="noteBox" class="hidden"><label class="f" for="clientNote">客戶備註（從客戶設定帶入，可修改）</label><textarea id="clientNote"></textarea></div>
 <div id="newClientBox" class="hidden"><label class="f" for="newClient">新客戶名稱</label><input type="text" id="newClient" placeholder="例：某某品牌"></div>
 <div id="pastBox" class="hidden"><label class="f" for="past">貼上過往資料（舊文案、成效好的標題等）</label><textarea id="past"></textarea></div>
 </section>
@@ -158,7 +160,7 @@ $('previewBtn').addEventListener('click', function () {
   rows.push(['勾選格式', fmts.length ? fmts.join('、') : '（未勾選）']);
   var auds = Array.prototype.map.call(document.querySelectorAll('.audrow'), function (r, i) { return '受眾 ' + (i + 1) + '：' + (r.querySelector('.audName').value.trim() || '（未填）') + '｜' + r.querySelector('.audCnt').value + ' 組'; });
   rows.push(['受眾', auds.join('\n')]);
-  [['產品／服務', 'product'], ['活動目標', 'goal'], ['品牌語氣', 'tone'], ['必提賣點', 'usp'], ['禁用字詞', 'banned']].forEach(function (r) { rows.push([r[0], val(r[1], '（空）')]); });
+  [['產品／服務', 'product'], ['活動目標', 'goal'], ['品牌語氣', 'tone'], ['必提賣點', 'usp'], ['禁用字詞', 'banned'], ['客戶備註', 'clientNote']].forEach(function (r) { rows.push([r[0], val(r[1], '（空）')]); });
   rows.push(['參考歷史成效', $('history').checked ? '是' : '否']);
   var t = $('previewTable'); t.innerHTML = '';
   rows.forEach(function (r) {
@@ -176,6 +178,45 @@ function addAud() {
 }
 $('addAud').addEventListener('click', addAud);
 addAud();
+var API = 'https://script.google.com/macros/s/AKfycbwwcmgtJHsrTcEy4daGkHAbivWoMC0WrERN-gV6tnEVgPdQn7GP3CxuFHlHAOmSlrPD3Q/exec';
+var CLIENTS = [];
+function getKey() { try { return localStorage.getItem('adc_key') || ''; } catch (e) { return ''; } }
+function setKey(k) { try { localStorage.setItem('adc_key', k); } catch (e) {} }
+function opt(v, t) { var o = document.createElement('option'); o.value = v; o.textContent = t; return o; }
+function fillSelect(list) {
+  var s = $('client'); s.innerHTML = '';
+  s.appendChild(opt('', '請選擇'));
+  list.forEach(function (c) { s.appendChild(opt(c['客戶名稱'], c['客戶名稱'])); });
+  s.appendChild(opt('__new', '＋ 新客戶'));
+}
+function loadClients(key) {
+  $('keyMsg').textContent = '讀取中…';
+  fetch(API + '?action=clients&key=' + encodeURIComponent(key)).then(function (r) { return r.json(); }).then(function (d) {
+    if (!d.ok) { $('keyBox').classList.remove('hidden'); $('keyMsg').textContent = d.error || '讀取失敗'; fillSelect([]); return; }
+    setKey(key); $('keyBox').classList.add('hidden'); $('keyMsg').textContent = '';
+    CLIENTS = d.clients || []; fillSelect(CLIENTS);
+  }).catch(function (e) { $('keyBox').classList.remove('hidden'); $('keyMsg').textContent = '連線失敗：' + e.message; fillSelect([]); });
+}
+function applyClient() {
+  var c = CLIENTS.filter(function (x) { return x['客戶名稱'] === $('client').value; })[0];
+  var info = $('clientInfo'); info.innerHTML = '';
+  ['tone', 'usp', 'banned', 'clientNote'].forEach(function (id) { $(id).value = ''; });
+  if (!c) { info.classList.add('hidden'); $('noteBox').classList.add('hidden'); return; }
+  $('tone').value = c['品牌語氣'] || ''; $('usp').value = c['必提賣點'] || ''; $('banned').value = c['禁用字詞'] || ''; $('clientNote').value = c['備註'] || '';
+  [['Google 帳號', c['Google 帳號 ID']], ['Meta 帳號', c['Meta 帳號 ID']]].forEach(function (p) {
+    var sp = document.createElement('span'); sp.textContent = p[0] + '：' + (p[1] || '（未填）'); info.appendChild(sp);
+  });
+  [['Meta 進稿表', c['Meta 進稿表連結']], ['Google 進稿表', c['Google 進稿表連結']], ['素材資料夾', c['素材資料夾連結']]].forEach(function (p) {
+    var el;
+    if (p[1] && /^https:\/\//.test(p[1])) { el = document.createElement('a'); el.href = p[1]; el.target = '_blank'; el.rel = 'noopener'; el.textContent = p[0] + ' ↗'; }
+    else { el = document.createElement('span'); el.textContent = p[0] + '：（未填）'; }
+    info.appendChild(el);
+  });
+  info.classList.remove('hidden'); $('noteBox').classList.remove('hidden');
+}
+$('client').addEventListener('change', applyClient);
+$('keyBtn').addEventListener('click', function () { var k = $('keyInput').value.trim(); if (k) loadClients(k); });
+(function () { var k = getKey(); if (k) loadClients(k); else { fillSelect([]); $('keyBox').classList.remove('hidden'); } })();
 </script>
 </body>
 </html>
