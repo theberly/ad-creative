@@ -38,6 +38,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #previewTable{width:100%;border-collapse:collapse;font-size:14px}
 #previewTable th{text-align:left;width:140px;color:var(--muted);font-weight:500;vertical-align:top;padding:6px 8px;border-bottom:1px solid var(--line)}
 #previewTable td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:pre-wrap}
+.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.assets label{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.assets label:has(input:checked){background:var(--accent-weak);border-color:var(--accent)}
+.assets span{font-size:14px}
+.assets small{display:block;color:var(--muted);font-size:12px;line-height:1.4}
+.assets label.later{opacity:.55;cursor:not-allowed}
+.tag{font-size:11px;background:#eef0f3;color:var(--muted);border-radius:4px;padding:0 5px;margin-left:4px}
+.aud{margin-top:12px}
+.audrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.audrow .audName{flex:1}
+.audrow .cnt{font-size:13px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:4px}
+.audrow .audCnt{width:56px;padding:6px;border:1px solid var(--line);border-radius:6px;font:inherit}
+button.small{padding:5px 12px;font-size:14px}
+button.x{padding:4px 10px}
 </style>
 </head>
 <body>
@@ -72,12 +86,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <label><input type="checkbox" name="fmt" value="Google 搜尋 RSA">搜尋 RSA（標題×15、描述×4）</label>
 <label><input type="checkbox" name="fmt" value="Google PMax">PMax（短標題、長標題、描述）</label>
 </div></div>
-<div class="group"><b>Google 廣告素材資源</b><div class="chips">
-<label><input type="checkbox" name="fmt" value="網站連結">網站連結</label>
-<label><input type="checkbox" name="fmt" value="摘要">摘要</label>
-<label><input type="checkbox" name="fmt" value="結構化摘要">結構化摘要</label>
-<label><input type="checkbox" name="fmt" value="促銷">促銷</label>
-<label><input type="checkbox" name="fmt" value="價格">價格</label>
+<div class="group"><b>Google 廣告素材資源</b><div class="assets">
+<label class="later"><input type="checkbox" name="fmt" value="圖片" disabled><span>圖片<span class="tag">第二階段</span><small>廣告圖片</small></span></label>
+<label><input type="checkbox" name="fmt" value="商家名稱"><span>商家名稱<small>品牌名稱，例：創創數位科技</small></span></label>
+<label class="later"><input type="checkbox" name="fmt" value="商家標誌" disabled><span>商家標誌<span class="tag">第二階段</span><small>品牌 logo</small></span></label>
+<label><input type="checkbox" name="fmt" value="網站連結"><span>網站連結<small>廣告下方可點的連結，例：課程介紹、學員見證</small></span></label>
+<label><input type="checkbox" name="fmt" value="標題"><span>標題<small>帳戶／活動層級共用的標題</small></span></label>
+<label><input type="checkbox" name="fmt" value="說明"><span>說明<small>帳戶／活動層級共用的說明</small></span></label>
+<label><input type="checkbox" name="fmt" value="文字免責事項"><span>文字免責事項<small>注意事項短句，例：實際優惠以官網公告為準</small></span></label>
+<label><input type="checkbox" name="fmt" value="摘要"><span>摘要<small>講好處的短句，例：免費諮詢、新會員折扣</small></span></label>
+<label><input type="checkbox" name="fmt" value="網站簡介"><span>網站簡介<small>分類＋項目，例：課程：SBIR、SIIR、CITD</small></span></label>
+<label><input type="checkbox" name="fmt" value="電話"><span>電話<span class="tag">只填欄位</span><small>客服電話</small></span></label>
+<label><input type="checkbox" name="fmt" value="待開發客戶表單"><span>待開發客戶表單<small>名單表單的標題、說明、問題</small></span></label>
+<label><input type="checkbox" name="fmt" value="訊息"><span>訊息<small>點了直接傳訊息的開場文字</small></span></label>
+<label><input type="checkbox" name="fmt" value="地區"><span>地區<span class="tag">只填欄位</span><small>門市地址</small></span></label>
+<label><input type="checkbox" name="fmt" value="價格"><span>價格<small>品項＋價格，例：衝刺班 $899 起</small></span></label>
+<label><input type="checkbox" name="fmt" value="應用程式"><span>應用程式<span class="tag">只填欄位</span><small>App 下載連結</small></span></label>
+<label><input type="checkbox" name="fmt" value="宣傳"><span>宣傳<small>活動優惠，例：雙 11 全館 85 折</small></span></label>
 </div></div>
 <div class="group"><b>Meta</b><div class="chips">
 <label><input type="checkbox" name="fmt" value="Meta 廣告">主要文字、標題、描述</label>
@@ -88,13 +113,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h2><span class="n">3</span>需求內容</h2>
 <div class="grid2">
 <div><label class="f" for="product">產品／服務</label><textarea id="product"></textarea></div>
-<div><label class="f" for="audience">受眾</label><textarea id="audience"></textarea></div>
 <div><label class="f" for="goal">活動目標</label><textarea id="goal" placeholder="例：導購、名單、品牌認知"></textarea></div>
 <div><label class="f" for="tone">品牌語氣</label><textarea id="tone"></textarea></div>
 <div><label class="f" for="usp">必提賣點</label><textarea id="usp"></textarea></div>
 <div><label class="f" for="banned">禁用字詞</label><textarea id="banned" placeholder="用頓號或換行分隔"></textarea></div>
 </div>
-<div class="chips" style="margin-top:12px"><label><input type="checkbox" id="history" checked>參考歷史成效（Google取數 Sheet）</label></div>
+<div class="aud"><label class="f">受眾（每個受眾各產一套）</label>
+<div id="audList"></div>
+<button type="button" class="ghost small" id="addAud">＋ 新增受眾</button></div>
+<div class="chips" style="margin-top:12px"><label><input type="checkbox" id="history" checked>參考歷史成效（Google＋Meta）</label></div>
 </section>
 
 <section>
@@ -129,7 +156,9 @@ $('previewBtn').addEventListener('click', function () {
   var rows = [['客戶', name], ['需求類型', $('mode').value]];
   if ($('mode').value !== '全新文案') rows.push(['過往資料', val('past', '（空）')]);
   rows.push(['勾選格式', fmts.length ? fmts.join('、') : '（未勾選）']);
-  [['產品／服務', 'product'], ['受眾', 'audience'], ['活動目標', 'goal'], ['品牌語氣', 'tone'], ['必提賣點', 'usp'], ['禁用字詞', 'banned']].forEach(function (r) { rows.push([r[0], val(r[1], '（空）')]); });
+  var auds = Array.prototype.map.call(document.querySelectorAll('.audrow'), function (r, i) { return '受眾 ' + (i + 1) + '：' + (r.querySelector('.audName').value.trim() || '（未填）') + '｜' + r.querySelector('.audCnt').value + ' 組'; });
+  rows.push(['受眾', auds.join('\n')]);
+  [['產品／服務', 'product'], ['活動目標', 'goal'], ['品牌語氣', 'tone'], ['必提賣點', 'usp'], ['禁用字詞', 'banned']].forEach(function (r) { rows.push([r[0], val(r[1], '（空）')]); });
   rows.push(['參考歷史成效', $('history').checked ? '是' : '否']);
   var t = $('previewTable'); t.innerHTML = '';
   rows.forEach(function (r) {
@@ -139,6 +168,14 @@ $('previewBtn').addEventListener('click', function () {
   $('previewBox').classList.remove('hidden');
   $('previewBox').scrollIntoView({ behavior: 'smooth' });
 });
+function addAud() {
+  var row = document.createElement('div'); row.className = 'audrow';
+  row.innerHTML = '<input type="text" class="audName" placeholder="例：40–55 歲中小企業主、北部"><label class="cnt">組數 <input type="number" class="audCnt" min="1" max="5" value="1"></label><button type="button" class="ghost x" aria-label="刪除">×</button>';
+  row.querySelector('.x').addEventListener('click', function () { if ($('audList').children.length > 1) row.remove(); });
+  $('audList').appendChild(row);
+}
+$('addAud').addEventListener('click', addAud);
+addAud();
 </script>
 </body>
 </html>
