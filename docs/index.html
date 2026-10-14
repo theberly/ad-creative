@@ -218,7 +218,6 @@ function renderList() {
   me.clients.filter(function (c) { return !q || c.name.indexOf(q) >= 0; }).forEach(function (c) {
     var li = el('li'); if (c.name === cur) li.classList.add('sel');
     var l = el('div'); l.appendChild(el('div', c.name, 'nm'));
-    l.appendChild(el('div', [c.meta && 'Meta ' + c.meta, c.google && 'Google ' + c.google].filter(Boolean).join(' · ') || '未指派', 'sub'));
     li.appendChild(l);
     if (!c.sheet) li.appendChild(el('span', '未建立', 'pill none'));
     else if (Number(c.pending) > 0) li.appendChild(el('span', c.pending, 'pill'));
