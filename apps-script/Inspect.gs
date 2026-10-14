@@ -22,3 +22,15 @@ function inspectChuangchuang() {
     if (t) Logger.log('第 ' + (i + 1) + ' 列：' + t.replace(/\n/g, ' / '));
   });
 }
+
+
+// 只讀：列出客戶主檔前 4 列（找欄名在哪一列），以及每位客戶的 A 欄名稱與狀態欄
+function inspectMasterHeaders() {
+  const sh = SpreadsheetApp.openById(SETTINGS_ID).getSheetByName('客戶主檔');
+  const v = sh.getDataRange().getDisplayValues();
+  Logger.log('共 ' + v.length + ' 列、' + (v[0] || []).length + ' 欄');
+  for (let i = 0; i < Math.min(4, v.length); i++) {
+    Logger.log('第 ' + (i + 1) + ' 列：' + v[i].map(function (x, j) { return (j + 1) + '=' + x; }).filter(function (t) { return !/=$/.test(t); }).join('｜'));
+  }
+  Logger.log('客戶 A 欄：' + v.slice(1).map(function (r) { return r[0]; }).filter(String).join('、'));
+}
