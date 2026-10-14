@@ -6,105 +6,173 @@
 <title>theberly 文案產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1f2933;--muted:#6b7785;--line:#e3e7ec;--accent:#2f6f5e;--accent-weak:#e6f1ed;--warn:#b54708;--warn-bg:#fff4e5;--red:#c62828;--red-bg:#fde7e7}
+:root{--bg:#f3f4f1;--panel:#fff;--ink:#1d2622;--muted:#6a756f;--line:#e2e5e0;--accent:#2f6f5e;--accent-2:#24584a;--accent-weak:#e5efea;--red:#c62828;--red-bg:#fdecea;--amber:#9a5b00;--amber-bg:#fff4e0;--side:#20302a;--side-ink:#dfe8e3;--side-muted:#9fb1a8}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-size:15px;line-height:1.6}
-header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-header h1{margin:0;font-size:18px}
-#who{font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
-main{max-width:960px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
-section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
-h2{font-size:16px;margin:0 0 12px}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.6}
+.top{height:56px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.brand{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px}
+.brand i{width:10px;height:10px;border-radius:3px;background:var(--accent);display:inline-block}
+#who{display:flex;gap:10px;align-items:center;color:var(--muted)}
 .hidden{display:none!important}
-.muted{color:var(--muted);font-size:13px}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);padding:6px 8px}
-td{border-bottom:1px solid var(--line);padding:8px}
-tr.sel td{background:var(--accent-weak)}
-button{font:inherit;padding:7px 14px;border-radius:6px;border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button{font:inherit;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover{background:var(--accent-weak)}
 button.primary{background:var(--accent);color:#fff}
-button.small{padding:3px 10px;font-size:13px}
+button.primary:hover{background:var(--accent-2)}
+button.small{padding:2px 10px;font-size:12px}
 button:disabled{opacity:.45;cursor:not-allowed}
 a{color:var(--accent)}
-label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
-select,input,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
-textarea{min-height:60px;resize:vertical}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-@media(max-width:640px){.grid2{grid-template-columns:1fr}}
-dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0;font-size:14px}
-dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap}
-.badge{display:inline-block;font-size:12px;border-radius:4px;padding:1px 7px;margin-right:6px;background:var(--accent-weak);color:var(--accent)}
+.muted{color:var(--muted);font-size:13px}
+#login{max-width:420px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:32px;text-align:center}
+#login h2{margin:0 0 6px;font-size:18px}
+#loginMsg{color:var(--red);min-height:22px}
+#gbtn{display:flex;justify-content:center;margin:18px 0 8px}
+.app{display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 56px)}
+aside{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;min-height:0}
+.search{padding:14px}
+.search input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #3a4c45;background:#2a3d36;color:var(--side-ink);font:inherit}
+.search input::placeholder{color:var(--side-muted)}
+#clientList{list-style:none;margin:0;padding:0 8px;overflow:auto;flex:1}
+#clientList li{padding:9px 10px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#clientList li:hover{background:#2c4038}
+#clientList li.sel{background:var(--accent)}
+#clientList .nm{font-weight:500}
+#clientList .sub{font-size:12px;color:var(--side-muted)}
+#clientList li.sel .sub{color:#d6ebe2}
+.pill{font-size:11px;border-radius:999px;padding:0 8px;background:#e8a33a;color:#2a1a00;font-weight:700}
+.pill.none{background:transparent;color:var(--side-muted);font-weight:400;border:1px solid #3a4c45}
+.adminBox{border-top:1px solid #33463f;padding:12px 14px;font-size:13px}
+.adminBox .ttl{color:var(--side-muted);font-size:12px;margin-bottom:6px}
+.adminBox a,.adminBox span{display:block;color:var(--side-ink);padding:4px 0;text-decoration:none}
+.adminBox span{color:var(--side-muted)}
+.main{overflow:auto;min-height:0}
+.empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.chead{background:var(--panel);border-bottom:1px solid var(--line);padding:16px 24px 0}
+.chead h2{margin:0;font-size:20px}
+.chead .meta{color:var(--muted);font-size:13px;margin-top:2px}
+.tabs{display:flex;gap:4px;margin-top:12px}
+.tabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--muted);padding:8px 14px}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.tabs button:hover{background:none;color:var(--ink)}
+.panel{padding:20px 24px}
+.gen{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
+@media(max-width:1000px){.gen{grid-template-columns:1fr}.app{grid-template-columns:1fr;height:auto}aside{max-height:260px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+label.f{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px}
+label.f:first-child{margin-top:0}
+select,input,textarea{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+textarea{min-height:56px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+#status{font-size:13px;color:var(--amber);margin-top:8px;min-height:20px}
+.ph{color:var(--muted);text-align:center;padding:48px 16px;border:1px dashed var(--line);border-radius:10px;background:var(--panel)}
+.set{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.set .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.badge{display:inline-block;font-size:11px;border-radius:4px;padding:1px 7px;margin-right:4px;background:var(--accent-weak);color:var(--accent)}
 .badge.warn{background:var(--red-bg);color:var(--red)}
-.pending{color:var(--red);font-weight:700}
-.set{border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px}
-.set .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.badge.amber{background:var(--amber-bg);color:var(--amber)}
 .field{margin-top:8px}
-.field .lbl{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
-.field .txt{white-space:pre-wrap;background:#fafbfc;border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-top:4px}
-.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
-#status{font-size:14px;color:var(--warn)}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2933;color:#fff;padding:8px 16px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.field .lbl{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.field .txt{white-space:pre-wrap;background:#fafbf9;border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-top:3px}
+.pending{color:var(--red);font-weight:700;background:var(--red-bg);border-radius:3px;padding:0 2px}
+.resHead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.resHead h3{margin:0;font-size:15px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;border-bottom:1px solid var(--line);padding:8px 10px;background:#fafbf9}
+td{border-bottom:1px solid var(--line);padding:8px 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.chips button{border-radius:999px;padding:3px 12px;font-size:13px;border-color:var(--line);color:var(--muted)}
+.chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips input{max-width:240px;margin-left:auto}
+.ref{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.ref .c{white-space:pre-wrap;margin-top:6px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.ref .c.open{display:block}
+dl{display:grid;grid-template-columns:110px 1fr;gap:10px 16px;margin:0}
+dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d2622;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.on{opacity:1}
 </style>
 </head>
 <body>
-<header>
-<h1>theberly 文案產生器</h1>
-<div id="who" class="hidden"><span id="whoName"></span><button class="small" id="logoutBtn">登出</button></div>
-</header>
-<main>
-<section id="loginBox">
+<div class="top"><div class="brand"><i></i>theberly 文案產生器</div><div id="who" class="hidden"><span id="whoName"></span><button class="small" id="logoutBtn">登出</button></div></div>
+
+<div id="login">
 <h2>登入</h2>
-<p class="muted">請用總表「人員」分頁登記的 Google 帳號登入。</p>
+<p class="muted">請用總表「人員」分頁登記的 Google 帳號登入</p>
 <div id="gbtn"></div>
-<p id="loginMsg" style="color:var(--red)"></p>
-</section>
+<p id="loginMsg"></p>
+</div>
 
-<section id="clientsBox" class="hidden">
-<h2>我的客戶</h2>
-<p class="muted" id="adminNote"></p>
-<table><thead><tr><th>客戶</th><th>Meta 負責</th><th>Google 負責</th><th>確認者</th><th>工作 Sheet</th><th></th></tr></thead><tbody id="clientRows"></tbody></table>
-</section>
+<div id="app" class="app hidden">
+<aside>
+<div class="search"><input id="q" placeholder="搜尋客戶"></div>
+<ul id="clientList"></ul>
+<div class="adminBox hidden" id="adminBox">
+<div class="ttl">管理</div>
+<span>＋ 新客戶（下一步）</span>
+<a href="https://docs.google.com/spreadsheets/d/1sNi-8OQDg3NtoBVM11Y65IpF-nNy0F1ZtJUivLZD3sY/edit" target="_blank" rel="noopener">人員與分派（總表）↗</a>
+</div>
+</aside>
 
-<section id="workBox" class="hidden">
-<h2 id="curName"></h2>
-<div id="noSheet" class="muted hidden">這個客戶還沒有工作 Sheet，請 Keani 或 Kimberly 先建立。</div>
-<div id="clientDetail">
-<p class="muted"><a id="sheetLink" target="_blank" rel="noopener">開啟工作 Sheet ↗</a>　要修改語氣、賣點、禁用字，請到工作 Sheet 的「設定」分頁</p>
-<dl id="settings"></dl>
-<p class="muted" id="refInfo"></p>
-<h2 style="margin-top:20px">填寫需求</h2>
-<div class="grid2">
+<div class="main">
+<div class="empty" id="emptyView">← 從左邊選一個客戶</div>
+<div id="clientView" class="hidden">
+<div class="chead">
+<h2 id="cName"></h2>
+<div class="meta" id="cMeta"></div>
+<div class="tabs" id="tabs"><button data-tab="gen" class="on">產生文案</button><button data-tab="hist">產出紀錄</button><button data-tab="refs">參考資料</button><button data-tab="set">設定</button></div>
+</div>
+
+<div class="panel" id="noSheet"><div class="ph">這個客戶還沒有工作 Sheet，請 Keani 或 Kimberly 先建立。</div></div>
+
+<div class="panel tab" data-tab="gen">
+<div class="gen">
+<div class="card">
+<div class="row2">
 <div><label class="f" for="q_pf">平台</label><select id="q_pf"><option>Meta</option><option disabled>Google（即將支援）</option></select></div>
-<div><label class="f" for="q_fmt">格式</label><select id="q_fmt"><option>Meta 廣告</option><option disabled>Google 搜尋 RSA（即將支援）</option><option disabled>Google PMax（即將支援）</option></select></div>
-<div><label class="f" for="q_act">活動名稱</label><input id="q_act" list="actList" placeholder="例：全通路餐飲"><datalist id="actList"></datalist></div>
+<div><label class="f" for="q_fmt">格式</label><select id="q_fmt"><option>Meta 廣告</option><option disabled>Google RSA（即將支援）</option></select></div>
+</div>
+<label class="f" for="q_act">活動名稱</label><input id="q_act" list="actList" placeholder="例：全通路餐飲"><datalist id="actList"></datalist>
+<label class="f" for="q_aud">受眾 *</label><textarea id="q_aud" placeholder="例：餐飲業老闆、店長（人手不夠、想用 AI 省力）"></textarea>
+<label class="f" for="q_prod">產品／服務</label><textarea id="q_prod" placeholder="例：免費 30 小時 AI 餐飲培訓班"></textarea>
+<div class="row2">
 <div><label class="f" for="q_goal">活動目標</label><select id="q_goal"><option>流量</option><option>銷售</option><option>名單</option><option>品牌認知</option><option>互動</option></select></div>
-<div><label class="f" for="q_aud">受眾</label><textarea id="q_aud" placeholder="例：餐飲業老闆、店長（人手不夠、想用 AI 省力）"></textarea></div>
-<div><label class="f" for="q_prod">產品／服務</label><textarea id="q_prod" placeholder="例：免費 30 小時 AI 餐飲培訓班"></textarea></div>
-<div><label class="f" for="q_url">到達網址</label><input id="q_url" placeholder="https://"></div>
 <div><label class="f" for="q_n">組數</label><input id="q_n" type="number" min="1" max="5" value="3"></div>
 </div>
-<label class="f" for="q_note">補充說明（方向、這次活動才有的內容，例如日期）</label><textarea id="q_note"></textarea>
-<div class="actions"><button class="primary" id="genBtn">產生文案</button><span id="status"></span></div>
-<div id="recentBox" class="hidden"><h2 style="margin-top:20px">最近的需求</h2><table><thead><tr><th>需求編號</th><th>活動</th><th>操作者</th><th>狀態</th><th></th></tr></thead><tbody id="recentRows"></tbody></table></div>
+<label class="f" for="q_url">到達網址</label><input id="q_url" placeholder="https://">
+<label class="f" for="q_note">補充說明（方向、這次才有的內容）</label><textarea id="q_note"></textarea>
+<div style="margin-top:14px"><button class="primary" id="genBtn" style="width:100%">產生文案</button></div>
+<div id="status"></div>
 </div>
-</section>
+<div id="genResult"><div class="ph">產出會顯示在這裡<br><span class="muted">紅字【待確認】要補真實內容；「需確認」是設定和需求沒寫、AI 自己加的事實</span></div></div>
+</div>
+</div>
 
-<section id="resultBox" class="hidden">
-<h2 id="resultTitle"></h2>
-<p class="muted">確認與修改請到工作 Sheet 的「產出」分頁。紅字【待確認】要補上真實內容；「需確認」是設定和需求裡沒寫到、AI 自己加的事實，請核對。</p>
-<div id="sets"></div>
-</section>
-</main>
+<div class="panel tab hidden" data-tab="hist">
+<table><thead><tr><th>需求編號</th><th>活動</th><th>格式</th><th>操作者</th><th>建立時間</th><th>狀態</th><th></th></tr></thead><tbody id="histRows"></tbody></table>
+<div id="histResult" style="margin-top:16px"></div>
+</div>
+
+<div class="panel tab hidden" data-tab="refs">
+<div class="chips" id="refChips"><button data-t="" class="on">全部</button><button data-t="成效好">成效好</button><button data-t="客戶提供">客戶提供</button><button data-t="僅供參考">僅供參考</button><input id="refQ" placeholder="搜尋內容或活動"></div>
+<div id="refList"><div class="ph">讀取中…</div></div>
+</div>
+
+<div class="panel tab hidden" data-tab="set">
+<div class="card"><dl id="settings"></dl><p class="muted" style="margin-bottom:0">要修改請到工作 Sheet 的「設定」分頁，網頁會直接讀最新內容。</p></div>
+</div>
+</div>
+</div>
+</div>
 <div id="toast"></div>
+
 <script>
 var API = 'https://script.google.com/macros/s/AKfycbwwcmgtJHsrTcEy4daGkHAbivWoMC0WrERN-gV6tnEVgPdQn7GP3CxuFHlHAOmSlrPD3Q/exec';
 var CLIENT_ID = '226548623145-jts9mnei1saeue2rnv529h0dsfmnvlpo.apps.googleusercontent.com';
-var token = '', me = null, cur = null;
+var token = '', me = null, cur = null, curData = null, refRows = null, refType = '';
 function $(id) { return document.getElementById(id); }
 function store(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { return null; } }
 function show(id, on) { $(id).classList.toggle('hidden', !on); }
-function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); setTimeout(function () { el.classList.remove('on'); }, 1500); }
+function toast(t) { var e = $('toast'); e.textContent = t; e.classList.add('on'); setTimeout(function () { e.classList.remove('on'); }, 1500); }
 function el(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
 
 function api(params, post) {
@@ -117,23 +185,18 @@ function api(params, post) {
     return d;
   });
 }
-
-function expired(t) {
-  try { var p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.exp * 1000 < Date.now() + 60000; } catch (e) { return true; }
-}
+function expired(t) { try { var p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.exp * 1000 < Date.now() + 60000; } catch (e) { return true; } }
 
 function gsiReady() {
   google.accounts.id.initialize({ client_id: CLIENT_ID, callback: function (r) { token = r.credential; store('adc_t', token); loadMe(); }, auto_select: true });
   google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'zh-TW' });
   var t = store('adc_t');
-  if (t && !expired(t)) { token = t; loadMe(); } else { show('loginBox', true); google.accounts.id.prompt(); }
+  if (t && !expired(t)) { token = t; loadMe(); } else google.accounts.id.prompt();
 }
-
 function logout(msg) {
   token = ''; me = null; cur = null; store('adc_t', null);
   try { google.accounts.id.disableAutoSelect(); } catch (e) {}
-  ['who', 'clientsBox', 'workBox', 'resultBox'].forEach(function (id) { show(id, false); });
-  show('loginBox', true);
+  show('app', false); show('who', false); show('login', true);
   $('loginMsg').textContent = msg || '';
 }
 $('logoutBtn').addEventListener('click', function () { logout(''); });
@@ -143,69 +206,116 @@ function loadMe() {
   api({ action: 'me' }).then(function (d) {
     me = d;
     $('whoName').textContent = d.name + '（' + d.role + '）';
-    show('who', true); show('loginBox', false); show('clientsBox', true);
-    $('adminNote').textContent = d.admin ? '你是管理者，看得到全部客戶。負責人與確認者的分派請到總表的「客戶清單」調整。' : '只會列出你負責或要確認的客戶。';
-    var tb = $('clientRows'); tb.innerHTML = '';
-    d.clients.forEach(function (c) {
-      var tr = document.createElement('tr'); tr.dataset.name = c.name;
-      [c.name, c.meta || '—', c.google || '—', c.reviewer || '—'].forEach(function (v) { tr.appendChild(el('td', v)); });
-      var td = document.createElement('td');
-      if (c.sheet) { var a = el('a', '開啟 ↗'); a.href = c.sheet; a.target = '_blank'; a.rel = 'noopener'; td.appendChild(a); } else td.appendChild(el('span', '未建立', 'muted'));
-      tr.appendChild(td);
-      var td2 = document.createElement('td'); var b = el('button', '選擇', 'small'); b.addEventListener('click', function () { selectClient(c.name); }); td2.appendChild(b); tr.appendChild(td2);
-      tb.appendChild(tr);
-    });
+    show('login', false); show('who', true); show('app', true); show('adminBox', d.admin);
+    renderList();
   }).catch(function (e) { $('loginMsg').textContent = e.message; });
 }
 
-function selectClient(name) {
-  cur = name;
-  Array.prototype.forEach.call(document.querySelectorAll('#clientRows tr'), function (tr) { tr.classList.toggle('sel', tr.dataset.name === name); });
-  show('workBox', true); show('resultBox', false);
-  $('curName').textContent = name + '　讀取中…';
-  api({ action: 'client', client: name }).then(function (d) {
-    $('curName').textContent = name;
-    show('noSheet', !d.hasSheet); show('clientDetail', d.hasSheet);
-    if (!d.hasSheet) return;
-    $('sheetLink').href = d.sheet;
-    var dl = $('settings'); dl.innerHTML = '';
-    ['品牌語氣', '必提賣點', '禁用字詞', '備註'].forEach(function (k) { dl.appendChild(el('dt', k)); dl.appendChild(el('dd', d.settings[k] || '（未填）')); });
-    var rc = d.refCounts || {};
-    $('refInfo').textContent = '參考資料：' + (Object.keys(rc).map(function (k) { return k + ' ' + rc[k]; }).join('、') || '無');
-    var dlist = $('actList'); dlist.innerHTML = '';
-    (d.activities || []).forEach(function (a) { var o = document.createElement('option'); o.value = a; dlist.appendChild(o); });
-    var rb = $('recentRows'); rb.innerHTML = '';
-    (d.recent || []).forEach(function (r) {
-      var tr = document.createElement('tr');
-      [r['需求編號'] || '—', r['活動名稱'] || '—', r['操作者'] || '—', r['狀態'] || '待產'].forEach(function (v) { tr.appendChild(el('td', v)); });
-      var td = document.createElement('td');
-      if (r['需求編號']) { var b = el('button', '查看', 'small'); b.addEventListener('click', function () { loadResults(r['需求編號']); }); td.appendChild(b); }
-      tr.appendChild(td); rb.appendChild(tr);
-    });
-    show('recentBox', (d.recent || []).length > 0);
-    $('workBox').scrollIntoView({ behavior: 'smooth' });
-  }).catch(function (e) { $('curName').textContent = name + '　讀取失敗：' + e.message; });
+function renderList() {
+  var q = $('q').value.trim(), ul = $('clientList'); ul.innerHTML = '';
+  me.clients.filter(function (c) { return !q || c.name.indexOf(q) >= 0; }).forEach(function (c) {
+    var li = el('li'); if (c.name === cur) li.classList.add('sel');
+    var l = el('div'); l.appendChild(el('div', c.name, 'nm'));
+    l.appendChild(el('div', [c.meta && 'Meta ' + c.meta, c.google && 'Google ' + c.google].filter(Boolean).join(' · ') || '未指派', 'sub'));
+    li.appendChild(l);
+    if (!c.sheet) li.appendChild(el('span', '未建立', 'pill none'));
+    else if (Number(c.pending) > 0) li.appendChild(el('span', c.pending, 'pill'));
+    li.addEventListener('click', function () { selectClient(c.name); });
+    ul.appendChild(li);
+  });
 }
+$('q').addEventListener('input', renderList);
+
+function setTab(t) {
+  Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.tab === t); });
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (p) { p.classList.toggle('hidden', !curData || !curData.hasSheet || p.dataset.tab !== t); });
+  if (t === 'refs' && curData && curData.hasSheet && !refRows) loadRefs();
+}
+Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.addEventListener('click', function () { setTab(b.dataset.tab); }); });
+
+function selectClient(name) {
+  cur = name; curData = null; refRows = null; renderList();
+  var c = me.clients.find(function (x) { return x.name === name; }) || {};
+  show('emptyView', false); show('clientView', true); show('noSheet', false);
+  $('cName').textContent = name;
+  $('cMeta').textContent = '讀取中…';
+  $('genResult').innerHTML = '<div class="ph">產出會顯示在這裡<br><span class="muted">紅字【待確認】要補真實內容；「需確認」是設定和需求沒寫、AI 自己加的事實</span></div>';
+  $('histResult').innerHTML = ''; $('status').textContent = '';
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (p) { p.classList.add('hidden'); });
+  api({ action: 'client', client: name }).then(function (d) {
+    if (cur !== name) return;
+    curData = d;
+    var meta = el('span', ['Meta：' + (c.meta || '—'), 'Google：' + (c.google || '—'), '確認者：' + (c.reviewer || '—')].join('　') + '　');
+    $('cMeta').innerHTML = ''; $('cMeta').appendChild(meta);
+    show('noSheet', !d.hasSheet);
+    if (!d.hasSheet) return;
+    var a = el('a', '開啟工作 Sheet ↗'); a.href = d.sheet; a.target = '_blank'; a.rel = 'noopener'; $('cMeta').appendChild(a);
+    var dl = $('actList'); dl.innerHTML = '';
+    (d.activities || []).forEach(function (x) { var o = document.createElement('option'); o.value = x; dl.appendChild(o); });
+    var sd = $('settings'); sd.innerHTML = '';
+    ['品牌語氣', '必提賣點', '禁用字詞', '備註', 'Meta 帳號 ID', 'Google 帳號 ID'].forEach(function (k) { sd.appendChild(el('dt', k)); sd.appendChild(el('dd', d.settings[k] || '（未填）')); });
+    renderHist(d.recent || []);
+    setTab(document.querySelector('#tabs button.on').dataset.tab);
+  }).catch(function (e) { $('cMeta').textContent = '讀取失敗：' + e.message; });
+}
+
+function renderHist(rows) {
+  var tb = $('histRows'); tb.innerHTML = '';
+  if (!rows.length) { var tr = el('tr'); var td = el('td', '還沒有需求', 'muted'); td.colSpan = 7; tr.appendChild(td); tb.appendChild(tr); return; }
+  rows.forEach(function (r) {
+    var tr = el('tr');
+    [r['需求編號'] || '—', r['活動名稱'] || '—', r['格式'] || '—', r['操作者'] || '—', r['建立時間'] || '—', r['狀態'] || '待產'].forEach(function (v) { tr.appendChild(el('td', v)); });
+    var td = el('td');
+    if (r['需求編號']) { var b = el('button', '查看', 'small'); b.addEventListener('click', function () { $('histResult').innerHTML = '<div class="ph">讀取中…</div>'; api({ action: 'results', client: cur, id: r['需求編號'] }).then(function (d) { renderResults($('histResult'), d); }).catch(function (e) { toast(e.message); }); }); td.appendChild(b); }
+    tr.appendChild(td); tb.appendChild(tr);
+  });
+}
+
+function loadRefs() {
+  $('refList').innerHTML = '<div class="ph">讀取中…</div>';
+  api({ action: 'refs', client: cur }).then(function (d) { refRows = d.rows; renderRefs(); }).catch(function (e) { $('refList').innerHTML = ''; $('refList').appendChild(el('div', '讀取失敗：' + e.message, 'ph')); });
+}
+function renderRefs() {
+  var box = $('refList'); box.innerHTML = '';
+  var q = $('refQ').value.trim();
+  var rows = (refRows || []).filter(function (r) { return (!refType || r.type === refType) && (!q || (r.content + r.activity).indexOf(q) >= 0); });
+  if (!rows.length) { box.appendChild(el('div', '沒有符合的參考資料', 'ph')); return; }
+  rows.forEach(function (r) {
+    var d = el('div', null, 'ref');
+    var h = el('div');
+    h.appendChild(el('span', r.type || '未分類', 'badge' + (r.type === '成效好' ? '' : r.type === '客戶提供' ? ' amber' : '')));
+    if (r.platform) h.appendChild(el('span', r.platform, 'badge'));
+    if (r.note) h.appendChild(el('span', r.note, 'muted'));
+    d.appendChild(h);
+    if (r.activity) d.appendChild(el('div', '活動：' + r.activity, 'muted'));
+    var c = el('div', r.content, 'c'); c.title = '點一下展開／收合'; c.addEventListener('click', function () { c.classList.toggle('open'); });
+    d.appendChild(c);
+    box.appendChild(d);
+  });
+}
+Array.prototype.forEach.call(document.querySelectorAll('#refChips button'), function (b) {
+  b.addEventListener('click', function () { refType = b.dataset.t; Array.prototype.forEach.call(document.querySelectorAll('#refChips button'), function (x) { x.classList.toggle('on', x === b); }); renderRefs(); });
+});
+$('refQ').addEventListener('input', renderRefs);
 
 function val(id) { return $(id).value.trim(); }
 $('genBtn').addEventListener('click', function () {
-  if (!cur) return;
+  if (!cur || !curData || !curData.hasSheet) return;
   if (!val('q_aud')) { $('status').textContent = '請填受眾'; return; }
   var req = { '平台': $('q_pf').value, '格式': $('q_fmt').value, '活動名稱': val('q_act'), '活動目標': $('q_goal').value, '受眾': val('q_aud'), '產品／服務': val('q_prod'), '到達網址': val('q_url'), '組數': val('q_n') || '3', '補充說明': val('q_note') };
-  var t0 = Date.now(), btn = $('genBtn');
+  var t0 = Date.now(), btn = $('genBtn'), client = cur;
   btn.disabled = true;
-  var timer = setInterval(function () { $('status').textContent = '產生中，已經 ' + Math.round((Date.now() - t0) / 1000) + ' 秒（通常 1–3 分鐘，AI 忙線時會自動重試）'; }, 1000);
-  api({ action: 'generate', client: cur, request: req }, true).then(function (d) {
+  $('genResult').innerHTML = '<div class="ph">AI 產生中…<br><span class="muted">通常 1–3 分鐘，忙線時會自動重試，可以先去做別的事</span></div>';
+  var timer = setInterval(function () { $('status').textContent = '產生中，已經 ' + Math.round((Date.now() - t0) / 1000) + ' 秒'; }, 1000);
+  api({ action: 'generate', client: client, request: req }, true).then(function (d) {
     $('status').textContent = '完成，花了 ' + Math.round((Date.now() - t0) / 1000) + ' 秒';
-    renderResults(d);
-    selectClient(cur);
-  }).catch(function (e) { $('status').textContent = '失敗：' + e.message; })
-    .then(function () { clearInterval(timer); btn.disabled = false; });
+    if (cur === client) { renderResults($('genResult'), d); api({ action: 'client', client: client }).then(function (x) { if (cur === client) { curData = x; renderHist(x.recent || []); } }); }
+    api({ action: 'me' }).then(function (m) { me = m; renderList(); });
+  }).catch(function (e) {
+    $('status').textContent = '失敗：' + e.message;
+    $('genResult').innerHTML = ''; $('genResult').appendChild(el('div', '這次沒有產出成功，可以稍等再按一次', 'ph'));
+  }).then(function () { clearInterval(timer); btn.disabled = false; });
 });
-
-function loadResults(id) {
-  api({ action: 'results', client: cur, id: id }).then(renderResults).catch(function (e) { toast(e.message); });
-}
 
 function highlight(box, text) {
   String(text || '').split(/(【待確認[^】]*】)/).forEach(function (part) {
@@ -213,34 +323,30 @@ function highlight(box, text) {
     if (/^【待確認/.test(part)) box.appendChild(el('span', part, 'pending')); else box.appendChild(document.createTextNode(part));
   });
 }
-
 function copy(text) {
   var done = function () { toast('已複製'); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
   function fallback() { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('複製失敗'); } document.body.removeChild(ta); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
 }
-
 function tsvCell(s) { s = String(s || ''); return /[\t\n"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 
-function renderResults(d) {
-  show('resultBox', true);
-  $('resultTitle').textContent = '產出結果　' + (d.id || '');
-  var box = $('sets'); box.innerHTML = '';
-  if (!d.rows || !d.rows.length) { box.appendChild(el('p', '沒有產出資料', 'muted')); return; }
+function renderResults(box, d) {
+  box.innerHTML = '';
+  var hd = el('div', null, 'resHead'); hd.appendChild(el('h3', '產出結果　' + (d.id || ''))); hd.appendChild(el('span', '確認與修改請到工作 Sheet「產出」分頁', 'muted'));
+  box.appendChild(hd);
+  if (!d.rows || !d.rows.length) { box.appendChild(el('div', '沒有產出資料', 'ph')); return; }
   d.rows.forEach(function (r) {
-    var s = el('div', null, 'set');
-    var head = el('div', null, 'head');
-    var left = el('div');
+    var s = el('div', null, 'set'), head = el('div', null, 'head'), left = el('div');
     left.appendChild(el('strong', '第 ' + r['序號'] + ' 組　'));
-    left.appendChild(el('span', 'CTA：' + (r['CTA'] || '—'), 'badge'));
+    left.appendChild(el('span', r['確認狀態'] || '待確認', 'badge' + (r['確認狀態'] === '已確認' ? '' : ' amber')));
+    left.appendChild(el('span', 'CTA ' + (r['CTA'] || '—'), 'badge'));
     left.appendChild(el('span', '字數 ' + r['字數（文案／標題／說明）'], 'badge'));
-    if (r['是否超限']) left.appendChild(el('span', '超限：' + r['是否超限'], 'badge warn'));
-    if (r['審核警示']) left.appendChild(el('span', r['審核警示'], 'badge warn'));
+    if (r['是否超限']) left.appendChild(el('span', '超限 ' + r['是否超限'], 'badge warn'));
+    String(r['審核警示'] || '').split('、').filter(Boolean).forEach(function (w) { left.appendChild(el('span', w, 'badge warn')); });
     head.appendChild(left);
     var all = el('button', '全部複製（Tab 分隔）', 'small');
     all.addEventListener('click', function () { copy([r['文案'], r['標題'], r['說明'], r['CTA'], r['到達網址']].map(tsvCell).join('\t')); });
-    head.appendChild(all);
-    s.appendChild(head);
+    head.appendChild(all); s.appendChild(head);
     [['文案', r['文案']], ['標題', r['標題']], ['說明', r['說明']], ['到達網址', r['到達網址']]].forEach(function (f) {
       if (f[0] === '到達網址' && !f[1]) return;
       var fd = el('div', null, 'field'), lbl = el('div', null, 'lbl');
@@ -252,7 +358,6 @@ function renderResults(d) {
     });
     box.appendChild(s);
   });
-  $('resultBox').scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer onload="gsiReady()"></script>

@@ -30,6 +30,7 @@ function route_(u, p) {
     if (p.client && u.clients.indexOf(p.client) < 0) return { ok: false, error: '你沒有這個客戶的權限' };
     if (p.action === 'client') return apiClient_(p.client);
     if (p.action === 'results') return apiResults_(p.client, p.id);
+    if (p.action === 'refs') return apiRefs_(p.client);
     if (p.action === 'generate') return apiGenerate_(u, p.client, p.request || {});
     return { ok: false, error: '未知的動作' };
   } catch (err) { return { ok: false, error: err.message }; }
@@ -39,7 +40,7 @@ function apiMe_(u) {
   const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues(), h = v[0];
   const pick = function (r, k) { return r[h.indexOf(k)] || ''; };
   const clients = v.slice(1).filter(function (r) { return r[0] && u.clients.indexOf(r[0]) >= 0; }).map(function (r) {
-    return { name: r[0], status: pick(r, '狀態'), meta: pick(r, 'Meta 負責'), google: pick(r, 'Google 負責'), reviewer: pick(r, '確認者'), sheet: pick(r, '工作 Sheet'), pending: pick(r, '待確認'), last: pick(r, '最近產出') };
+    return { name: r[0], status: pick(r, '狀態'), meta: pick(r, 'Meta 負責'), google: pick(r, 'Google 負責'), reviewer: pick(r, '確認者'), sheet: pick(r, '工作 Sheet'), pending: pendingOf_(pick(r, '工作 Sheet')), last: pick(r, '最近產出') };
   });
   return { ok: true, name: u.name, role: u.role, admin: u.admin, clients: clients };
 }
@@ -58,7 +59,7 @@ function apiClient_(client) {
     if (iA >= 0) String(r[iA]).split('、').forEach(function (a) { a = a.trim(); if (a) acts[a] = 1; });
   });
   const rq = tableOf_(ss.getSheetByName('需求'));
-  const recent = rq.rows.filter(function (r) { return r.join('').trim(); }).slice(-5).reverse().map(function (r) {
+  const recent = rq.rows.filter(function (r) { return r.join('').trim(); }).slice(-20).reverse().map(function (r) {
     const o = {}; rq.h.forEach(function (k, i) { if (k) o[k] = r[i]; }); return o;
   });
   return { ok: true, client: client, hasSheet: true, sheet: ss.getUrl(), settings: set, refCounts: counts, activities: Object.keys(acts), recent: recent };
@@ -115,4 +116,28 @@ function testApi() {
   Logger.log('鼎東策略｜' + (c.ok ? '參考資料 ' + JSON.stringify(c.refCounts) + '｜活動 ' + (c.activities || []).length + ' 個' : c.error));
   Logger.log('沒登入：' + handle_({ action: 'me' }).error);
   Logger.log('假憑證：' + handle_({ action: 'me', idToken: 'fake' }).error);
+}
+
+
+// 待確認數：該客戶工作 Sheet「產出」裡確認狀態＝待確認的組數
+function pendingOf_(url) {
+  const m = String(url || '').match(/\/d\/([^/]+)/);
+  if (!m) return '';
+  try {
+    const t = tableOf_(SpreadsheetApp.openById(m[1]).getSheetByName('產出'));
+    const i = t.h.indexOf('確認狀態');
+    return i < 0 ? '' : t.rows.filter(function (r) { return r[i] === '待確認'; }).length;
+  } catch (e) { return ''; }
+}
+
+// 參考資料清單（內容截 500 字）
+function apiRefs_(client) {
+  const wid = workSheetIdOf_(client);
+  if (!wid) return { ok: false, error: '這個客戶還沒有工作 Sheet' };
+  const t = tableOf_(SpreadsheetApp.openById(wid).getSheetByName('參考資料'));
+  const g = function (r, k) { const i = t.h.indexOf(k); return i < 0 ? '' : r[i]; };
+  const rows = t.rows.filter(function (r) { return g(r, '內容'); }).slice(0, 300).map(function (r) {
+    return { type: r[0], platform: g(r, '平台'), activity: g(r, '活動'), note: g(r, '成效備註'), source: g(r, '來源／連結'), content: String(g(r, '內容')).slice(0, 500) };
+  });
+  return { ok: true, rows: rows };
 }
