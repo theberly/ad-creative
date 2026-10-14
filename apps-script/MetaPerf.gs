@@ -67,3 +67,29 @@ function inspectCcMetaPerf() {
   });
   Logger.log('參考資料 ' + rows.length + ' 則，能對到廣告成效的：' + hit + ' 則');
 }
+
+
+// 從客戶主檔查 Meta 帳號 ID
+function metaActOf_(name) {
+  const v = SpreadsheetApp.openById(SETTINGS_ID).getSheetByName('客戶主檔').getDataRange().getDisplayValues();
+  const hi = v.findIndex(function (r) { return r[0] === '報表單位'; });
+  const iM = v[hi].indexOf('Meta 廣告帳號 ID');
+  const row = v.slice(hi + 1).find(function (r) { return r[0] === name; });
+  return row && iM >= 0 ? row[iM] : '';
+}
+
+// 只讀：用客戶名稱查帳號，列出成效前 15 則與文案抓取情況
+function inspectMetaPerfByClient_(name) {
+  const act = metaActOf_(name);
+  if (!/^act_\d+$/.test(act)) { Logger.log('客戶主檔找不到「' + name + '」的 Meta 帳號 ID，先停'); return; }
+  Logger.log(name + '｜' + act);
+  const ads = fetchMetaAds_(act);
+  const cut = function (x) { x = String(x).replace(/[\s\u2800]+/g, ' ').trim(); return x.length > 30 ? x.slice(0, 30) + '…' : x; };
+  const spent = ads.filter(function (a) { return a.spend > 0; });
+  Logger.log('廣告數：' + ads.length + '｜有花費：' + spent.length + '｜有文案：' + ads.filter(function (a) { return a.body; }).length + '｜有註冊數：' + ads.filter(function (a) { return a.reg > 0; }).length);
+  spent.sort(function (a, b) { return b.spend - a.spend; }).slice(0, 15).forEach(function (a) {
+    Logger.log(a.name + '｜' + a.status + '｜花費 ' + Math.round(a.spend) + '｜點擊 ' + a.clicks + '｜註冊 ' + a.reg + '｜' + (cut(a.body) || '（沒抓到文案）'));
+  });
+}
+
+function inspectDingdongMetaPerf() { inspectMetaPerfByClient_('鼎東策略'); }
