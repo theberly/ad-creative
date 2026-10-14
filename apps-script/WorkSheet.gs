@@ -2,8 +2,8 @@
 const WORK_DIR_ID = '140Ik9v9xKzmi-3-MbyTqvlmrFGbdKF40';
 const WS_TABS = {
   '設定': ['欄位', '內容'],
-  '參考資料': ['類型（成效好／客戶提供／僅供參考）', '平台', '格式', '內容', '來源／連結', '成效備註', '加入日期', '加入者'],
-  '需求': ['需求編號', '建立時間', '操作者', '平台', '格式', '受眾', '組數', '產品／服務', '活動目標', '補充說明', '狀態'],
+  '參考資料': ['類型（成效好／客戶提供／僅供參考）', '平台', '格式', '內容', '來源／連結', '成效備註', '加入日期', '加入者', '活動'],
+  '需求': ['需求編號', '建立時間', '操作者', '平台', '活動名稱', '格式', '受眾', '組數', '產品／服務', '活動目標', '到達網址', '補充說明', '狀態'],
   '產出': ['需求編號', '產出時間', '平台', '格式', '欄位', '序號', '受眾', '文案', '字數（半形計）', '上限', '是否超限', '審核警示', '確認狀態', '確認者', '確認時間', '修正版文案']
 };
 const WS_SETTING_KEYS = ['客戶名稱', 'Google 帳號 ID', 'Meta 帳號 ID', '品牌語氣', '必提賣點', '禁用字詞', '素材資料夾連結', 'Meta 進稿表連結', 'Google 進稿表連結', '備註'];
@@ -104,3 +104,47 @@ function masterRowOf_(name) {
 
 function createDingdongWorkSheetPreview() { createWorkSheet_('鼎東策略', false); }
 function createDingdongWorkSheetApply() { createWorkSheet_('鼎東策略', true); }
+
+
+// 把客戶清單裡所有工作 Sheet 升級成目前的範本欄位（只補缺的，不刪資料）
+function upgradeWorkSheetsPreview() { upgradeWorkSheets_(false); }
+function upgradeWorkSheetsApply() { upgradeWorkSheets_(true); }
+
+function upgradeWorkSheets_(apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const iW = v[0].indexOf('工作 Sheet');
+  v.slice(1).forEach(function (r) {
+    const mm = String(r[iW]).match(/\/d\/([^/]+)/);
+    if (!mm) return;
+    const name = r[0], ss = SpreadsheetApp.openById(mm[1]);
+
+    const ref = ss.getSheetByName('參考資料');
+    const wantR = WS_TABS['參考資料'];
+    const rh = ref.getRange(1, 1, 1, ref.getLastColumn()).getValues()[0];
+    wantR.forEach(function (h) {
+      if (rh.indexOf(h) >= 0) return;
+      Logger.log(tag + name + '｜參考資料加欄：' + h + '（第 ' + (rh.length + 1) + ' 欄）');
+      if (apply) ref.getRange(1, rh.length + 1).setValue(h).setFontWeight('bold');
+      rh.push(h);
+    });
+    const n = ref.getLastRow() - 1;
+    Logger.log(tag + name + '｜參考資料 ' + n + ' 列改成固定列高');
+    if (apply && n > 0) {
+      ref.getRange(2, 1, n, rh.length).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP).setVerticalAlignment('top');
+      ref.setRowHeightsForced(2, n, 21);
+    }
+
+    const dq = ss.getSheetByName('需求');
+    const wantD = WS_TABS['需求'];
+    const dh = dq.getRange(1, 1, 1, dq.getLastColumn()).getValues()[0];
+    if (dh.join('|') === wantD.join('|')) { Logger.log(tag + name + '｜需求欄位已是最新'); return; }
+    if (dq.getLastRow() > 1) { Logger.log('注意：' + name + ' 的需求已有資料，欄位不自動改'); return; }
+    Logger.log(tag + name + '｜需求欄位改成：' + wantD.join('、'));
+    if (apply) {
+      dq.clear();
+      dq.getRange(1, 1, 1, wantD.length).setValues([wantD]).setFontWeight('bold');
+      dq.setFrozenRows(1);
+    }
+  });
+}

@@ -40,8 +40,8 @@ function importMetaPerfRef_(name, exclude, apply) {
       (ins.actions || []).forEach(function (x) { if (g.test(x.action_type)) res += Number(x.value); });
       const t = adText_(ad.creative);
       const key = camp.objective + '｜' + ad.name;
-      const m = merged[key] || (merged[key] = { name: ad.name, goal: camp.objective, spend: 0, res: 0, body: '', title: '' });
-      m.spend += Number(ins.spend || 0); m.res += res;
+      const m = merged[key] || (merged[key] = { name: ad.name, goal: camp.objective, spend: 0, res: 0, body: '', title: '', camps: {} });
+      m.spend += Number(ins.spend || 0); m.res += res; if (camp.name) m.camps[camp.name] = 1;
       if (!m.body && t.body) { m.body = t.body; m.title = t.title || ''; }
     });
     if (!page.paging || !page.paging.next) break;
@@ -73,15 +73,59 @@ function importMetaPerfRef_(name, exclude, apply) {
     seen[content] = 1;
     const g = REF_GOALS[m.goal];
     const note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + g.metric + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
-    out.push([good[m.goal + '｜' + m.name] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）']);
+    out.push([good[m.goal + '｜' + m.name] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）', Object.keys(m.camps).join('、')]);
   });
 
   Logger.log(tag + '排除品牌 ' + excluded + ' 則｜活動目標不在三組內 ' + noGoal + ' 則｜沒抓到文案 ' + noText + ' 則｜重複略過 ' + dup + ' 則');
   Logger.log(tag + '可寫入 ' + out.length + ' 則（成效好 ' + out.filter(function (r) { return r[0] === '成效好'; }).length + '）');
   out.filter(function (r) { return r[0] === '成效好'; }).forEach(function (r) { Logger.log(tag + '成效好｜' + r[4] + '｜' + r[5]); });
   if (!apply || !out.length) return;
-  ref.getRange(ref.getLastRow() + 1, 1, out.length, 8).setValues(out);
+  ref.getRange(ref.getLastRow() + 1, 1, out.length, 9).setValues(out);
   ref.getRange(2, 4, ref.getLastRow() - 1, 1).setWrap(true);
   ref.setColumnWidth(4, 480);
   Logger.log('已寫入 ' + out.length + ' 則到參考資料');
+}
+
+
+// 已匯入的參考資料補填「活動」：用來源欄的廣告名稱，查 Meta 上它屬於哪個行銷活動
+function fillDingdongRefCampaignPreview() { fillRefCampaign_('鼎東策略', /香積麵|悅善廚/, false); }
+function fillDingdongRefCampaignApply() { fillRefCampaign_('鼎東策略', /香積麵|悅善廚/, true); }
+
+function fillRefCampaign_(name, exclude, apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const act = metaActOf_(name), wid = workSheetIdOf_(name);
+  if (!/^act_\d+$/.test(act) || !wid) { Logger.log('找不到「' + name + '」的 Meta 帳號或工作 Sheet，先停'); return; }
+  const ref = SpreadsheetApp.openById(wid).getSheetByName('參考資料');
+  const h = ref.getRange(1, 1, 1, ref.getLastColumn()).getValues()[0];
+  const iA = h.indexOf('活動'), iS = h.indexOf('來源／連結');
+  if (iA < 0) { Logger.log('參考資料還沒有「活動」欄，先跑 WorkSheet.gs 的 upgradeWorkSheetsApply'); return; }
+
+  const map = {};
+  let page = metaGet_(act + '/ads', { fields: 'name,campaign{name}', limit: 200 });
+  for (let i = 0; i < 20; i++) {
+    (page.data || []).forEach(function (ad) {
+      const c = ad.campaign && ad.campaign.name || '';
+      if (!c || (exclude && (exclude.test(ad.name) || exclude.test(c)))) return;
+      (map[ad.name] || (map[ad.name] = {}))[c] = 1;
+    });
+    if (!page.paging || !page.paging.next) break;
+    page = metaGet_(page.paging.next);
+  }
+
+  const n = ref.getLastRow() - 1;
+  if (n < 1) { Logger.log('參考資料沒有資料'); return; }
+  const rows = ref.getRange(2, 1, n, h.length).getDisplayValues();
+  let k = 0, miss = 0;
+  rows.forEach(function (r, j) {
+    if (r[iA]) return;
+    const mm = String(r[iS]).match(/^廣告名稱：(.+)$/);
+    if (!mm) return;
+    const c = map[mm[1]];
+    if (!c) { miss++; return; }
+    const val = Object.keys(c).join('、');
+    k++;
+    if (k <= 5) Logger.log(tag + mm[1] + ' → ' + val);
+    if (apply) ref.getRange(j + 2, iA + 1).setValue(val);
+  });
+  Logger.log(tag + '補填活動 ' + k + ' 列｜找不到對應 ' + miss + ' 列');
 }
