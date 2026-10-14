@@ -30,7 +30,7 @@ function markPending_(text) {
   return b.build();
 }
 
-function generate_(name, apply) {
+function generate_(name, apply, onlyRow) {
   const tag = apply ? '' : '[預覽] ';
   const OUT = WS_TABS['產出'];
   const wid = workSheetIdOf_(name);
@@ -46,7 +46,7 @@ function generate_(name, apply) {
   const req = ss.getSheetByName('需求'), rq = tableOf_(req), H = rq.h;
   const col = function (r, k) { return r[H.indexOf(k)] || ''; };
   const todo = [];
-  rq.rows.forEach(function (r, i) { if (!col(r, '狀態') && col(r, '格式')) todo.push({ r: r, row: i + 2 }); });
+  rq.rows.forEach(function (r, i) { if (!col(r, '狀態') && col(r, '格式') && (!onlyRow || i + 2 === onlyRow)) todo.push({ r: r, row: i + 2 }); });
   if (!todo.length) { Logger.log('需求分頁沒有待產的列（狀態是空的才會產）'); return; }
 
   const ref = tableOf_(ss.getSheetByName('參考資料')), RH = ref.h;
