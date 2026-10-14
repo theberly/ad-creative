@@ -52,7 +52,7 @@ function createWorkSheet_(name, apply) {
   Logger.log(tag + '建立：' + title + '（放在 06_文案素材產生器）');
   WS_SETTING_KEYS.forEach(function (k) { Logger.log(tag + '設定｜' + k + '：' + (set[k] || '（空）')); });
   Object.keys(WS_TABS).forEach(function (t) { Logger.log(tag + '分頁：' + t + '｜' + WS_TABS[t].join('、')); });
-  Logger.log(tag + '共用編輯權：' + people.join('、') + '｜' + (emails.join('、') || '（無）'));
+  Logger.log(tag + '之後要共用編輯權（這次不共用）：' + people.join('、') + '｜' + (emails.join('、') || '（無）'));
   if (missing.length) Logger.log('注意：人員分頁找不到 Email：' + missing.join('、'));
   if (!apply) return;
 
@@ -80,10 +80,7 @@ function createWorkSheet_(name, apply) {
   nss.getSheetByName('參考資料').getRange(2, 2, 999, 1).setDataValidation(dv(['Google', 'Meta', '共用']));
   nss.getSheetByName('產出').getRange(2, 13, 999, 1).setDataValidation(dv(['待確認', '已確認', '退回']));
 
-  emails.forEach(function (e) {
-    try { nss.addEditor(e); Logger.log('已共用：' + e); }
-    catch (err) { Logger.log('共用失敗：' + e + '｜' + err.message); }
-  });
+  Logger.log('開發中先不共用，之後會共用給：' + (emails.join('、') || '（無）'));
 
   list.getRange(li + 1, lh.indexOf('工作 Sheet') + 1).setValue(nss.getUrl());
   Logger.log('已建立並寫回客戶清單：' + nss.getUrl());
