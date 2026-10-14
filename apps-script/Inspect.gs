@@ -63,3 +63,26 @@ function inspectHubFolder() {
   Logger.log('檔案：' + (fl.join('、') || '（空）'));
   Logger.log('子資料夾：' + (sl.join('、') || '（空）'));
 }
+
+
+// 只讀：列出創創 Meta／Google 進稿表每個分頁的欄名列與前 2 筆內容（每格截 30 字）
+function inspectCcSubmissionSheets() {
+  const ids = { 'Meta': '165bctJJfIyK2b0BSoQQD4Bge70bjmH599yQ5WlJJYqE', 'Google': '1N_Llrxyglz3Dd75DP-pExMXMIDbjUh72xPNpChhyTSo' };
+  const kw = /文案|標題|Headline|說明|描述|Description/;
+  const cut = function (x) { x = String(x).replace(/\s+/g, ' '); return x.length > 30 ? x.slice(0, 30) + '…' : x; };
+  Object.keys(ids).forEach(function (pf) {
+    const book = SpreadsheetApp.openById(ids[pf]);
+    book.getSheets().forEach(function (sh) {
+      const v = sh.getDataRange().getDisplayValues();
+      const hi = v.findIndex(function (r) { return r.some(function (c) { return kw.test(c); }); });
+      Logger.log('【' + pf + '】' + sh.getName() + '｜' + v.length + ' 列｜欄名列：' + (hi < 0 ? '找不到' : '第 ' + (hi + 1) + ' 列'));
+      if (hi < 0) return;
+      Logger.log('　欄名：' + v[hi].map(function (c, j) { return c ? (j + 1) + '=' + cut(c) : ''; }).filter(String).join('｜'));
+      const rows = v.slice(hi + 1).filter(function (r) { return r.join('').trim(); });
+      Logger.log('　有內容的列：' + rows.length);
+      rows.slice(0, 2).forEach(function (r, k) {
+        Logger.log('　範例 ' + (k + 1) + '：' + r.map(function (c, j) { return c ? (j + 1) + '=' + cut(c) : ''; }).filter(String).join('｜'));
+      });
+    });
+  });
+}
