@@ -16,8 +16,16 @@ function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).se
 
 function handle_(p) {
   try {
-    const u = userByCode_(p.code);
-    if (!u) return { ok: false, error: '通行碼錯誤' };
+    const v = verifyIdToken_(p.idToken);
+    if (v.error) return { ok: false, error: v.error, needLogin: true };
+    const u = userByEmail_(v.email);
+    if (!u) return { ok: false, error: v.email + ' 不在人員名單裡，請聯絡 Keani 或 Kimberly', needLogin: true };
+    return route_(u, p);
+  } catch (err) { return { ok: false, error: err.message }; }
+}
+
+function route_(u, p) {
+  try {
     if (p.action === 'me') return apiMe_(u);
     if (p.client && u.clients.indexOf(p.client) < 0) return { ok: false, error: '你沒有這個客戶的權限' };
     if (p.action === 'client') return apiClient_(p.client);
@@ -95,18 +103,16 @@ function apiGenerate_(u, client, rq) {
   return { ok: true, id: id, rows: r.rows };
 }
 
-// 只讀測試：用人員分頁第一位「管理」的通行碼，跑「我是誰」和「客戶資料（鼎東策略）」
+// 只讀測試：用人員分頁第一位「管理」的身分（不經登入），跑我是誰／客戶資料／最新產出
 function testApi() {
   const v = SpreadsheetApp.getActive().getSheetByName('人員').getDataRange().getDisplayValues();
-  const ic = v[0].indexOf('通行碼');
-  const admin = v.slice(1).find(function (r) { return /管理/.test(r[2]) && r[ic]; });
-  if (!admin) { Logger.log('人員分頁找不到有通行碼的管理者'); return; }
-  const me = handle_({ action: 'me', code: admin[ic] });
+  const admin = v.slice(1).find(function (r) { return /管理/.test(r[2]) && r[1]; });
+  if (!admin) { Logger.log('人員分頁找不到有 Email 的管理者'); return; }
+  const u = userByEmail_(String(admin[1]).split(/[,，、\s]+/)[0]);
+  const me = route_(u, { action: 'me' });
   Logger.log('我是誰：' + me.name + '｜' + me.role + '｜客戶 ' + (me.clients || []).length + ' 家');
-  const c = handle_({ action: 'client', code: admin[ic], client: '鼎東策略' });
-  Logger.log('鼎東策略｜' + (c.ok ? '工作 Sheet ' + (c.hasSheet ? '有' : '無') + '｜參考資料 ' + JSON.stringify(c.refCounts) + '｜活動 ' + (c.activities || []).length + ' 個｜最近需求 ' + (c.recent || []).length + ' 筆' : c.error));
-  const r = handle_({ action: 'results', code: admin[ic], client: '鼎東策略' });
-  Logger.log('最新產出：' + (r.ok ? r.id + '｜' + r.rows.length + ' 組' : r.error));
-  Logger.log('錯誤通行碼：' + handle_({ action: 'me', code: 'WRONG' }).error);
-  Logger.log('沒權限的客戶：' + handle_({ action: 'client', code: 'WRONG', client: '鼎東策略' }).error);
+  const c = route_(u, { action: 'client', client: '鼎東策略' });
+  Logger.log('鼎東策略｜' + (c.ok ? '參考資料 ' + JSON.stringify(c.refCounts) + '｜活動 ' + (c.activities || []).length + ' 個' : c.error));
+  Logger.log('沒登入：' + handle_({ action: 'me' }).error);
+  Logger.log('假憑證：' + handle_({ action: 'me', idToken: 'fake' }).error);
 }

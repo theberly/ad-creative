@@ -56,3 +56,36 @@ function peopleCodes_(apply) {
     if (apply) sh.getRange(i + 2, ic + 1).setValue(c);
   });
 }
+
+
+// Google 登入：驗證網頁送來的 ID token，再用 Email 對總表「人員」
+const OAUTH_CLIENT_ID = '226548623145-jts9mnei1saeue2rnv529h0dsfmnvlpo.apps.googleusercontent.com';
+
+function verifyIdToken_(t) {
+  if (!t) return { error: '請先登入' };
+  const cache = CacheService.getScriptCache();
+  const key = 'idt_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, t)).slice(0, 40);
+  const hit = cache.get(key);
+  if (hit) return { email: hit };
+  const res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(t), { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) return { error: '登入已過期，請重新登入' };
+  const j = JSON.parse(res.getContentText());
+  if (j.aud !== OAUTH_CLIENT_ID) return { error: '登入來源不正確' };
+  if (String(j.email_verified) !== 'true') return { error: '這個 Google 帳號的 Email 未驗證' };
+  const left = Number(j.exp) - Math.floor(Date.now() / 1000);
+  if (!(left > 0)) return { error: '登入已過期，請重新登入' };
+  const email = String(j.email).toLowerCase();
+  cache.put(key, email, Math.min(left, 3000));
+  return { email: email };
+}
+
+function userByEmail_(email) {
+  email = String(email || '').toLowerCase();
+  if (!email) return null;
+  const v = SpreadsheetApp.getActive().getSheetByName('人員').getDataRange().getDisplayValues();
+  const r = v.slice(1).find(function (x) {
+    return x[0] && String(x[1]).toLowerCase().split(/[,，、\s]+/).indexOf(email) >= 0;
+  });
+  if (!r) return null;
+  return { name: r[0], email: email, role: r[2], admin: /管理/.test(r[2]), clients: clientsOf_(r[0], r[2]) };
+}

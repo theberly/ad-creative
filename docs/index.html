@@ -6,217 +6,255 @@
 <title>theberly 文案產生器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1f2933;--muted:#6b7785;--line:#e3e7ec;--accent:#2f6f5e;--accent-weak:#e6f1ed;--warn:#b54708;}
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1f2933;--muted:#6b7785;--line:#e3e7ec;--accent:#2f6f5e;--accent-weak:#e6f1ed;--warn:#b54708;--warn-bg:#fff4e5;--red:#c62828;--red-bg:#fde7e7}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-size:15px;line-height:1.6}
-header{background:var(--card);border-bottom:1px solid var(--line);padding:16px 24px}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 header h1{margin:0;font-size:18px}
-header p{margin:2px 0 0;color:var(--muted);font-size:13px}
-main{max-width:880px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
+#who{font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
+main{max-width:960px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
-h2{font-size:15px;margin:0 0 12px;display:flex;gap:8px;align-items:center}
-h2 .n{background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+h2{font-size:16px;margin:0 0 12px}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);padding:6px 8px}
+td{border-bottom:1px solid var(--line);padding:8px}
+tr.sel td{background:var(--accent-weak)}
+button{font:inherit;padding:7px 14px;border-radius:6px;border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button.primary{background:var(--accent);color:#fff}
+button.small{padding:3px 10px;font-size:13px}
+button:disabled{opacity:.45;cursor:not-allowed}
+a{color:var(--accent)}
 label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
-select,input[type=text],textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
-textarea{min-height:64px;resize:vertical}
+select,input,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+textarea{min-height:60px;resize:vertical}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-.group{margin-bottom:14px}
-.group b{font-size:13px;display:block;margin-bottom:6px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips label{border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:14px;user-select:none}
-.chips input{margin-right:6px}
-.chips label:has(input:checked){background:var(--accent-weak);border-color:var(--accent)}
-.hidden{display:none}
-.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-button{font:inherit;padding:9px 18px;border-radius:6px;border:1px solid var(--accent);cursor:pointer}
-.primary{background:var(--accent);color:#fff}
-.ghost{background:#fff;color:var(--accent)}
-button:disabled{opacity:.45;cursor:not-allowed}
-.note{color:var(--warn);font-size:13px}
-.badge{font-size:12px;background:#fff4e5;color:var(--warn);border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:400}
-#previewTable{width:100%;border-collapse:collapse;font-size:14px}
-#previewTable th{text-align:left;width:140px;color:var(--muted);font-weight:500;vertical-align:top;padding:6px 8px;border-bottom:1px solid var(--line)}
-#previewTable td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:pre-wrap}
-.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-.assets label{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer}
-.assets label:has(input:checked){background:var(--accent-weak);border-color:var(--accent)}
-.assets span{font-size:14px}
-.assets small{display:block;color:var(--muted);font-size:12px;line-height:1.4}
-.assets label.later{opacity:.55;cursor:not-allowed}
-.tag{font-size:11px;background:#eef0f3;color:var(--muted);border-radius:4px;padding:0 5px;margin-left:4px}
-.aud{margin-top:12px}
-.audrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.audrow .audName{flex:1}
-.audrow .cnt{font-size:13px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:4px}
-.audrow .audCnt{width:56px;padding:6px;border:1px solid var(--line);border-radius:6px;font:inherit}
-button.small{padding:5px 12px;font-size:14px}
-button.x{padding:4px 10px}
-.keyrow{display:flex;gap:8px}
-#clientInfo{margin-top:12px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
-#clientInfo a{color:var(--accent)}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0;font-size:14px}
+dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap}
+.badge{display:inline-block;font-size:12px;border-radius:4px;padding:1px 7px;margin-right:6px;background:var(--accent-weak);color:var(--accent)}
+.badge.warn{background:var(--red-bg);color:var(--red)}
+.pending{color:var(--red);font-weight:700}
+.set{border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:12px}
+.set .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.field{margin-top:8px}
+.field .lbl{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.field .txt{white-space:pre-wrap;background:#fafbfc;border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-top:4px}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+#status{font-size:14px;color:var(--warn)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2933;color:#fff;padding:8px 16px;border-radius:6px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
 </style>
 </head>
 <body>
 <header>
-<h1>theberly 文案產生器<span class="badge">骨架版・尚未接 AI</span></h1>
-<p>選客戶 → 勾格式 → 填需求 → 產出寫入 Google Sheet，由 Keani／Kimberly 確認</p>
+<h1>theberly 文案產生器</h1>
+<div id="who" class="hidden"><span id="whoName"></span><button class="small" id="logoutBtn">登出</button></div>
 </header>
 <main>
-<section>
-<h2><span class="n">1</span>客戶與需求類型</h2>
+<section id="loginBox">
+<h2>登入</h2>
+<p class="muted">請用總表「人員」分頁登記的 Google 帳號登入。</p>
+<div id="gbtn"></div>
+<p id="loginMsg" style="color:var(--red)"></p>
+</section>
+
+<section id="clientsBox" class="hidden">
+<h2>我的客戶</h2>
+<p class="muted" id="adminNote"></p>
+<table><thead><tr><th>客戶</th><th>Meta 負責</th><th>Google 負責</th><th>確認者</th><th>工作 Sheet</th><th></th></tr></thead><tbody id="clientRows"></tbody></table>
+</section>
+
+<section id="workBox" class="hidden">
+<h2 id="curName"></h2>
+<div id="noSheet" class="muted hidden">這個客戶還沒有工作 Sheet，請 Keani 或 Kimberly 先建立。</div>
+<div id="clientDetail">
+<p class="muted"><a id="sheetLink" target="_blank" rel="noopener">開啟工作 Sheet ↗</a>　要修改語氣、賣點、禁用字，請到工作 Sheet 的「設定」分頁</p>
+<dl id="settings"></dl>
+<p class="muted" id="refInfo"></p>
+<h2 style="margin-top:20px">填寫需求</h2>
 <div class="grid2">
-<div><label class="f" for="client">客戶</label>
-<select id="client"><option value="">載入中…</option></select></div>
-<div><label class="f" for="mode">需求類型</label>
-<select id="mode">
-<option value="全新文案">全新文案</option>
-<option value="依過往資料延伸">依過往資料延伸</option>
-<option value="改寫既有文案">改寫既有文案</option>
-</select></div>
+<div><label class="f" for="q_pf">平台</label><select id="q_pf"><option>Meta</option><option disabled>Google（即將支援）</option></select></div>
+<div><label class="f" for="q_fmt">格式</label><select id="q_fmt"><option>Meta 廣告</option><option disabled>Google 搜尋 RSA（即將支援）</option><option disabled>Google PMax（即將支援）</option></select></div>
+<div><label class="f" for="q_act">活動名稱</label><input id="q_act" list="actList" placeholder="例：全通路餐飲"><datalist id="actList"></datalist></div>
+<div><label class="f" for="q_goal">活動目標</label><select id="q_goal"><option>流量</option><option>銷售</option><option>名單</option><option>品牌認知</option><option>互動</option></select></div>
+<div><label class="f" for="q_aud">受眾</label><textarea id="q_aud" placeholder="例：餐飲業老闆、店長（人手不夠、想用 AI 省力）"></textarea></div>
+<div><label class="f" for="q_prod">產品／服務</label><textarea id="q_prod" placeholder="例：免費 30 小時 AI 餐飲培訓班"></textarea></div>
+<div><label class="f" for="q_url">到達網址</label><input id="q_url" placeholder="https://"></div>
+<div><label class="f" for="q_n">組數</label><input id="q_n" type="number" min="1" max="5" value="3"></div>
 </div>
-<div id="keyBox" class="hidden"><label class="f" for="keyInput">通行碼（第一次使用需輸入，向 Keani 索取）</label><div class="keyrow"><input type="text" id="keyInput"><button type="button" class="ghost small" id="keyBtn">確認</button></div><p class="note" id="keyMsg"></p></div>
-<div id="clientInfo" class="hidden"></div>
-<div id="noteBox" class="hidden"><label class="f" for="clientNote">客戶備註（從客戶設定帶入，可修改）</label><textarea id="clientNote"></textarea></div>
-<div id="newClientBox" class="hidden"><label class="f" for="newClient">新客戶名稱</label><input type="text" id="newClient" placeholder="例：某某品牌"></div>
-<div id="pastBox" class="hidden"><label class="f" for="past">貼上過往資料（舊文案、成效好的標題等）</label><textarea id="past"></textarea></div>
-</section>
-
-<section>
-<h2><span class="n">2</span>要產哪些格式</h2>
-<div class="group"><b>Google</b><div class="chips">
-<label><input type="checkbox" name="fmt" value="Google 搜尋 RSA">搜尋 RSA（標題×15、描述×4）</label>
-<label><input type="checkbox" name="fmt" value="Google PMax">PMax（短標題、長標題、描述）</label>
-</div></div>
-<div class="group"><b>Google 廣告素材資源</b><div class="assets">
-<label class="later"><input type="checkbox" name="fmt" value="圖片" disabled><span>圖片<span class="tag">第二階段</span><small>廣告圖片</small></span></label>
-<label><input type="checkbox" name="fmt" value="商家名稱"><span>商家名稱<small>品牌名稱，例：創創數位科技</small></span></label>
-<label class="later"><input type="checkbox" name="fmt" value="商家標誌" disabled><span>商家標誌<span class="tag">第二階段</span><small>品牌 logo</small></span></label>
-<label><input type="checkbox" name="fmt" value="網站連結"><span>網站連結<small>廣告下方可點的連結，例：課程介紹、學員見證</small></span></label>
-<label><input type="checkbox" name="fmt" value="標題"><span>標題<small>帳戶／活動層級共用的標題</small></span></label>
-<label><input type="checkbox" name="fmt" value="說明"><span>說明<small>帳戶／活動層級共用的說明</small></span></label>
-<label><input type="checkbox" name="fmt" value="文字免責事項"><span>文字免責事項<small>注意事項短句，例：實際優惠以官網公告為準</small></span></label>
-<label><input type="checkbox" name="fmt" value="摘要"><span>摘要<small>講好處的短句，例：免費諮詢、新會員折扣</small></span></label>
-<label><input type="checkbox" name="fmt" value="網站簡介"><span>網站簡介<small>分類＋項目，例：課程：SBIR、SIIR、CITD</small></span></label>
-<label><input type="checkbox" name="fmt" value="電話"><span>電話<span class="tag">只填欄位</span><small>客服電話</small></span></label>
-<label><input type="checkbox" name="fmt" value="待開發客戶表單"><span>待開發客戶表單<small>名單表單的標題、說明、問題</small></span></label>
-<label><input type="checkbox" name="fmt" value="訊息"><span>訊息<small>點了直接傳訊息的開場文字</small></span></label>
-<label><input type="checkbox" name="fmt" value="地區"><span>地區<span class="tag">只填欄位</span><small>門市地址</small></span></label>
-<label><input type="checkbox" name="fmt" value="價格"><span>價格<small>品項＋價格，例：衝刺班 $899 起</small></span></label>
-<label><input type="checkbox" name="fmt" value="應用程式"><span>應用程式<span class="tag">只填欄位</span><small>App 下載連結</small></span></label>
-<label><input type="checkbox" name="fmt" value="宣傳"><span>宣傳<small>活動優惠，例：雙 11 全館 85 折</small></span></label>
-</div></div>
-<div class="group"><b>Meta</b><div class="chips">
-<label><input type="checkbox" name="fmt" value="Meta 廣告">主要文字、標題、描述</label>
-</div></div>
-</section>
-
-<section>
-<h2><span class="n">3</span>需求內容</h2>
-<div class="grid2">
-<div><label class="f" for="product">產品／服務</label><textarea id="product"></textarea></div>
-<div><label class="f" for="goal">活動目標</label><textarea id="goal" placeholder="例：導購、名單、品牌認知"></textarea></div>
-<div><label class="f" for="tone">品牌語氣</label><textarea id="tone"></textarea></div>
-<div><label class="f" for="usp">必提賣點</label><textarea id="usp"></textarea></div>
-<div><label class="f" for="banned">禁用字詞</label><textarea id="banned" placeholder="用頓號或換行分隔"></textarea></div>
-</div>
-<div class="aud"><label class="f">受眾（每個受眾各產一套）</label>
-<div id="audList"></div>
-<button type="button" class="ghost small" id="addAud">＋ 新增受眾</button></div>
-<div class="chips" style="margin-top:12px"><label><input type="checkbox" id="history" checked>參考歷史成效（Google＋Meta）</label></div>
-</section>
-
-<section>
-<div class="actions">
-<button class="ghost" id="previewBtn">預覽輸入</button>
-<button class="primary" disabled>產生文案</button>
-<span class="note">AI 尚未接上，目前只能預覽輸入內容</span>
+<label class="f" for="q_note">補充說明（方向、這次活動才有的內容，例如日期）</label><textarea id="q_note"></textarea>
+<div class="actions"><button class="primary" id="genBtn">產生文案</button><span id="status"></span></div>
+<div id="recentBox" class="hidden"><h2 style="margin-top:20px">最近的需求</h2><table><thead><tr><th>需求編號</th><th>活動</th><th>操作者</th><th>狀態</th><th></th></tr></thead><tbody id="recentRows"></tbody></table></div>
 </div>
 </section>
 
-<section id="previewBox" class="hidden">
-<h2>輸入預覽（不會寫入 Sheet）</h2>
-<table id="previewTable"></table>
+<section id="resultBox" class="hidden">
+<h2 id="resultTitle"></h2>
+<p class="muted">確認與修改請到工作 Sheet 的「產出」分頁。紅字【待確認】要補上真實內容；「需確認」是設定和需求裡沒寫到、AI 自己加的事實，請核對。</p>
+<div id="sets"></div>
 </section>
 </main>
+<div id="toast"></div>
 <script>
-var $ = function (id) { return document.getElementById(id); };
-function toggle() {
-  var isNew = $('client').value === '__new';
-  $('newClientBox').classList.toggle('hidden', !isNew);
-  $('pastBox').classList.toggle('hidden', $('mode').value === '全新文案');
-  $('history').disabled = isNew;
-  if (isNew) $('history').checked = false;
-}
-$('client').addEventListener('change', toggle);
-$('mode').addEventListener('change', toggle);
-function val(id, empty) { var v = $(id).value.trim(); return v || empty; }
-$('previewBtn').addEventListener('click', function () {
-  var c = $('client').value;
-  var name = c === '__new' ? val('newClient', '（未填名稱）') + '（新客戶）' : (c || '（未選）');
-  var fmts = Array.prototype.map.call(document.querySelectorAll('input[name="fmt"]:checked'), function (i) { return i.value; });
-  var rows = [['客戶', name], ['需求類型', $('mode').value]];
-  if ($('mode').value !== '全新文案') rows.push(['過往資料', val('past', '（空）')]);
-  rows.push(['勾選格式', fmts.length ? fmts.join('、') : '（未勾選）']);
-  var auds = Array.prototype.map.call(document.querySelectorAll('.audrow'), function (r, i) { return '受眾 ' + (i + 1) + '：' + (r.querySelector('.audName').value.trim() || '（未填）') + '｜' + r.querySelector('.audCnt').value + ' 組'; });
-  rows.push(['受眾', auds.join('\n')]);
-  [['產品／服務', 'product'], ['活動目標', 'goal'], ['品牌語氣', 'tone'], ['必提賣點', 'usp'], ['禁用字詞', 'banned'], ['客戶備註', 'clientNote']].forEach(function (r) { rows.push([r[0], val(r[1], '（空）')]); });
-  rows.push(['參考歷史成效', $('history').checked ? '是' : '否']);
-  var t = $('previewTable'); t.innerHTML = '';
-  rows.forEach(function (r) {
-    var tr = document.createElement('tr'), th = document.createElement('th'), td = document.createElement('td');
-    th.textContent = r[0]; td.textContent = r[1]; tr.appendChild(th); tr.appendChild(td); t.appendChild(tr);
-  });
-  $('previewBox').classList.remove('hidden');
-  $('previewBox').scrollIntoView({ behavior: 'smooth' });
-});
-function addAud() {
-  var row = document.createElement('div'); row.className = 'audrow';
-  row.innerHTML = '<input type="text" class="audName" placeholder="例：40–55 歲中小企業主、北部"><label class="cnt">組數 <input type="number" class="audCnt" min="1" max="5" value="1"></label><button type="button" class="ghost x" aria-label="刪除">×</button>';
-  row.querySelector('.x').addEventListener('click', function () { if ($('audList').children.length > 1) row.remove(); });
-  $('audList').appendChild(row);
-}
-$('addAud').addEventListener('click', addAud);
-addAud();
 var API = 'https://script.google.com/macros/s/AKfycbwwcmgtJHsrTcEy4daGkHAbivWoMC0WrERN-gV6tnEVgPdQn7GP3CxuFHlHAOmSlrPD3Q/exec';
-var CLIENTS = [];
-function getKey() { try { return localStorage.getItem('adc_key') || ''; } catch (e) { return ''; } }
-function setKey(k) { try { localStorage.setItem('adc_key', k); } catch (e) {} }
-function opt(v, t) { var o = document.createElement('option'); o.value = v; o.textContent = t; return o; }
-function fillSelect(list) {
-  var s = $('client'); s.innerHTML = '';
-  s.appendChild(opt('', '請選擇'));
-  list.forEach(function (c) { s.appendChild(opt(c['客戶名稱'], c['客戶名稱'])); });
-  s.appendChild(opt('__new', '＋ 新客戶'));
-}
-function loadClients(key) {
-  $('keyMsg').textContent = '讀取中…';
-  fetch(API + '?action=clients&key=' + encodeURIComponent(key)).then(function (r) { return r.json(); }).then(function (d) {
-    if (!d.ok) { $('keyBox').classList.remove('hidden'); $('keyMsg').textContent = d.error || '讀取失敗'; fillSelect([]); return; }
-    setKey(key); $('keyBox').classList.add('hidden'); $('keyMsg').textContent = '';
-    CLIENTS = d.clients || []; fillSelect(CLIENTS);
-  }).catch(function (e) { $('keyBox').classList.remove('hidden'); $('keyMsg').textContent = '連線失敗：' + e.message; fillSelect([]); });
-}
-function applyClient() {
-  var c = CLIENTS.filter(function (x) { return x['客戶名稱'] === $('client').value; })[0];
-  var info = $('clientInfo'); info.innerHTML = '';
-  ['tone', 'usp', 'banned', 'clientNote'].forEach(function (id) { $(id).value = ''; });
-  if (!c) { info.classList.add('hidden'); $('noteBox').classList.add('hidden'); return; }
-  $('tone').value = c['品牌語氣'] || ''; $('usp').value = c['必提賣點'] || ''; $('banned').value = c['禁用字詞'] || ''; $('clientNote').value = c['備註'] || '';
-  [['Google 帳號', c['Google 帳號 ID']], ['Meta 帳號', c['Meta 帳號 ID']]].forEach(function (p) {
-    var sp = document.createElement('span'); sp.textContent = p[0] + '：' + (p[1] || '（未填）'); info.appendChild(sp);
+var CLIENT_ID = '226548623145-jts9mnei1saeue2rnv529h0dsfmnvlpo.apps.googleusercontent.com';
+var token = '', me = null, cur = null;
+function $(id) { return document.getElementById(id); }
+function store(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { return null; } }
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); setTimeout(function () { el.classList.remove('on'); }, 1500); }
+function el(tag, text, cls) { var e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; }
+
+function api(params, post) {
+  var p = Object.assign({ idToken: token }, params);
+  var req = post ? fetch(API, { method: 'POST', body: JSON.stringify(p) })
+    : fetch(API + '?' + Object.keys(p).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); }).join('&'));
+  return req.then(function (r) { return r.json(); }).then(function (d) {
+    if (!d.ok && d.needLogin) { logout(d.error); throw new Error(d.error); }
+    if (!d.ok) throw new Error(d.error || '發生錯誤');
+    return d;
   });
-  [['Meta 進稿表', c['Meta 進稿表連結']], ['Google 進稿表', c['Google 進稿表連結']], ['素材資料夾', c['素材資料夾連結']]].forEach(function (p) {
-    var el;
-    if (p[1] && /^https:\/\//.test(p[1])) { el = document.createElement('a'); el.href = p[1]; el.target = '_blank'; el.rel = 'noopener'; el.textContent = p[0] + ' ↗'; }
-    else { el = document.createElement('span'); el.textContent = p[0] + '：（未填）'; }
-    info.appendChild(el);
-  });
-  info.classList.remove('hidden'); $('noteBox').classList.remove('hidden');
 }
-$('client').addEventListener('change', applyClient);
-$('keyBtn').addEventListener('click', function () { var k = $('keyInput').value.trim(); if (k) loadClients(k); });
-(function () { var k = getKey(); if (k) loadClients(k); else { fillSelect([]); $('keyBox').classList.remove('hidden'); } })();
+
+function expired(t) {
+  try { var p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.exp * 1000 < Date.now() + 60000; } catch (e) { return true; }
+}
+
+function gsiReady() {
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: function (r) { token = r.credential; store('adc_t', token); loadMe(); }, auto_select: true });
+  google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'zh-TW' });
+  var t = store('adc_t');
+  if (t && !expired(t)) { token = t; loadMe(); } else { show('loginBox', true); google.accounts.id.prompt(); }
+}
+
+function logout(msg) {
+  token = ''; me = null; cur = null; store('adc_t', null);
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  ['who', 'clientsBox', 'workBox', 'resultBox'].forEach(function (id) { show(id, false); });
+  show('loginBox', true);
+  $('loginMsg').textContent = msg || '';
+}
+$('logoutBtn').addEventListener('click', function () { logout(''); });
+
+function loadMe() {
+  $('loginMsg').textContent = '登入中…';
+  api({ action: 'me' }).then(function (d) {
+    me = d;
+    $('whoName').textContent = d.name + '（' + d.role + '）';
+    show('who', true); show('loginBox', false); show('clientsBox', true);
+    $('adminNote').textContent = d.admin ? '你是管理者，看得到全部客戶。負責人與確認者的分派請到總表的「客戶清單」調整。' : '只會列出你負責或要確認的客戶。';
+    var tb = $('clientRows'); tb.innerHTML = '';
+    d.clients.forEach(function (c) {
+      var tr = document.createElement('tr'); tr.dataset.name = c.name;
+      [c.name, c.meta || '—', c.google || '—', c.reviewer || '—'].forEach(function (v) { tr.appendChild(el('td', v)); });
+      var td = document.createElement('td');
+      if (c.sheet) { var a = el('a', '開啟 ↗'); a.href = c.sheet; a.target = '_blank'; a.rel = 'noopener'; td.appendChild(a); } else td.appendChild(el('span', '未建立', 'muted'));
+      tr.appendChild(td);
+      var td2 = document.createElement('td'); var b = el('button', '選擇', 'small'); b.addEventListener('click', function () { selectClient(c.name); }); td2.appendChild(b); tr.appendChild(td2);
+      tb.appendChild(tr);
+    });
+  }).catch(function (e) { $('loginMsg').textContent = e.message; });
+}
+
+function selectClient(name) {
+  cur = name;
+  Array.prototype.forEach.call(document.querySelectorAll('#clientRows tr'), function (tr) { tr.classList.toggle('sel', tr.dataset.name === name); });
+  show('workBox', true); show('resultBox', false);
+  $('curName').textContent = name + '　讀取中…';
+  api({ action: 'client', client: name }).then(function (d) {
+    $('curName').textContent = name;
+    show('noSheet', !d.hasSheet); show('clientDetail', d.hasSheet);
+    if (!d.hasSheet) return;
+    $('sheetLink').href = d.sheet;
+    var dl = $('settings'); dl.innerHTML = '';
+    ['品牌語氣', '必提賣點', '禁用字詞', '備註'].forEach(function (k) { dl.appendChild(el('dt', k)); dl.appendChild(el('dd', d.settings[k] || '（未填）')); });
+    var rc = d.refCounts || {};
+    $('refInfo').textContent = '參考資料：' + (Object.keys(rc).map(function (k) { return k + ' ' + rc[k]; }).join('、') || '無');
+    var dlist = $('actList'); dlist.innerHTML = '';
+    (d.activities || []).forEach(function (a) { var o = document.createElement('option'); o.value = a; dlist.appendChild(o); });
+    var rb = $('recentRows'); rb.innerHTML = '';
+    (d.recent || []).forEach(function (r) {
+      var tr = document.createElement('tr');
+      [r['需求編號'] || '—', r['活動名稱'] || '—', r['操作者'] || '—', r['狀態'] || '待產'].forEach(function (v) { tr.appendChild(el('td', v)); });
+      var td = document.createElement('td');
+      if (r['需求編號']) { var b = el('button', '查看', 'small'); b.addEventListener('click', function () { loadResults(r['需求編號']); }); td.appendChild(b); }
+      tr.appendChild(td); rb.appendChild(tr);
+    });
+    show('recentBox', (d.recent || []).length > 0);
+    $('workBox').scrollIntoView({ behavior: 'smooth' });
+  }).catch(function (e) { $('curName').textContent = name + '　讀取失敗：' + e.message; });
+}
+
+function val(id) { return $(id).value.trim(); }
+$('genBtn').addEventListener('click', function () {
+  if (!cur) return;
+  if (!val('q_aud')) { $('status').textContent = '請填受眾'; return; }
+  var req = { '平台': $('q_pf').value, '格式': $('q_fmt').value, '活動名稱': val('q_act'), '活動目標': $('q_goal').value, '受眾': val('q_aud'), '產品／服務': val('q_prod'), '到達網址': val('q_url'), '組數': val('q_n') || '3', '補充說明': val('q_note') };
+  var t0 = Date.now(), btn = $('genBtn');
+  btn.disabled = true;
+  var timer = setInterval(function () { $('status').textContent = '產生中，已經 ' + Math.round((Date.now() - t0) / 1000) + ' 秒（通常 1–3 分鐘，AI 忙線時會自動重試）'; }, 1000);
+  api({ action: 'generate', client: cur, request: req }, true).then(function (d) {
+    $('status').textContent = '完成，花了 ' + Math.round((Date.now() - t0) / 1000) + ' 秒';
+    renderResults(d);
+    selectClient(cur);
+  }).catch(function (e) { $('status').textContent = '失敗：' + e.message; })
+    .then(function () { clearInterval(timer); btn.disabled = false; });
+});
+
+function loadResults(id) {
+  api({ action: 'results', client: cur, id: id }).then(renderResults).catch(function (e) { toast(e.message); });
+}
+
+function highlight(box, text) {
+  String(text || '').split(/(【待確認[^】]*】)/).forEach(function (part) {
+    if (!part) return;
+    if (/^【待確認/.test(part)) box.appendChild(el('span', part, 'pending')); else box.appendChild(document.createTextNode(part));
+  });
+}
+
+function copy(text) {
+  var done = function () { toast('已複製'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  function fallback() { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('複製失敗'); } document.body.removeChild(ta); }
+}
+
+function tsvCell(s) { s = String(s || ''); return /[\t\n"]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+
+function renderResults(d) {
+  show('resultBox', true);
+  $('resultTitle').textContent = '產出結果　' + (d.id || '');
+  var box = $('sets'); box.innerHTML = '';
+  if (!d.rows || !d.rows.length) { box.appendChild(el('p', '沒有產出資料', 'muted')); return; }
+  d.rows.forEach(function (r) {
+    var s = el('div', null, 'set');
+    var head = el('div', null, 'head');
+    var left = el('div');
+    left.appendChild(el('strong', '第 ' + r['序號'] + ' 組　'));
+    left.appendChild(el('span', 'CTA：' + (r['CTA'] || '—'), 'badge'));
+    left.appendChild(el('span', '字數 ' + r['字數（文案／標題／說明）'], 'badge'));
+    if (r['是否超限']) left.appendChild(el('span', '超限：' + r['是否超限'], 'badge warn'));
+    if (r['審核警示']) left.appendChild(el('span', r['審核警示'], 'badge warn'));
+    head.appendChild(left);
+    var all = el('button', '全部複製（Tab 分隔）', 'small');
+    all.addEventListener('click', function () { copy([r['文案'], r['標題'], r['說明'], r['CTA'], r['到達網址']].map(tsvCell).join('\t')); });
+    head.appendChild(all);
+    s.appendChild(head);
+    [['文案', r['文案']], ['標題', r['標題']], ['說明', r['說明']], ['到達網址', r['到達網址']]].forEach(function (f) {
+      if (f[0] === '到達網址' && !f[1]) return;
+      var fd = el('div', null, 'field'), lbl = el('div', null, 'lbl');
+      lbl.appendChild(el('span', f[0]));
+      var b = el('button', '複製', 'small'); b.addEventListener('click', function () { copy(f[1]); }); lbl.appendChild(b);
+      fd.appendChild(lbl);
+      var tx = el('div', null, 'txt'); highlight(tx, f[1]); fd.appendChild(tx);
+      s.appendChild(fd);
+    });
+    box.appendChild(s);
+  });
+  $('resultBox').scrollIntoView({ behavior: 'smooth' });
+}
 </script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="gsiReady()"></script>
 </body>
 </html>
