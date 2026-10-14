@@ -34,6 +34,9 @@ function createWorkSheet_(name, apply) {
     if (row) cv[0].forEach(function (k, i) { set[k] = row[i]; });
   }
   set['客戶名稱'] = name;
+  const mrow = masterRowOf_(name);
+  if (!set['Google 帳號 ID'] && mrow['Google 帳號 ID']) set['Google 帳號 ID'] = mrow['Google 帳號 ID'];
+  if (!set['Meta 帳號 ID'] && mrow['Meta 廣告帳號 ID']) set['Meta 帳號 ID'] = mrow['Meta 廣告帳號 ID'];
 
   const emailOf = {};
   ss.getSheetByName('人員').getDataRange().getDisplayValues().slice(1).forEach(function (r) {
@@ -85,3 +88,19 @@ function createWorkSheet_(name, apply) {
   list.getRange(li + 1, lh.indexOf('工作 Sheet') + 1).setValue(nss.getUrl());
   Logger.log('已建立並寫回客戶清單：' + nss.getUrl());
 }
+
+
+// 客戶主檔中某客戶那列，回傳 {欄名: 值}
+function masterRowOf_(name) {
+  const v = SpreadsheetApp.openById(SETTINGS_ID).getSheetByName('客戶主檔').getDataRange().getDisplayValues();
+  const hi = v.findIndex(function (r) { return r[0] === '報表單位'; });
+  if (hi < 0) return {};
+  const row = v.slice(hi + 1).find(function (r) { return r[0] === name; });
+  if (!row) return {};
+  const o = {};
+  v[hi].forEach(function (k, i) { if (k) o[k.trim()] = row[i]; });
+  return o;
+}
+
+function createDingdongWorkSheetPreview() { createWorkSheet_('鼎東策略', false); }
+function createDingdongWorkSheetApply() { createWorkSheet_('鼎東策略', true); }

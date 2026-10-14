@@ -1,0 +1,87 @@
+// 從 Meta 廣告直接匯入參考資料：文案＋成效，依活動目標分組比成本，前 1/4 標「成效好」
+const REF_GOALS = {
+  OUTCOME_TRAFFIC: { label: '流量', metric: '頁面瀏覽', test: function (t) { return t === 'landing_page_view'; } },
+  OUTCOME_SALES: { label: '銷售', metric: '完成註冊', test: function (t) { return t === 'complete_registration'; } },
+  OUTCOME_LEADS: { label: '名單', metric: '名單', test: function (t) { return t === 'lead' || /lead_grouped/.test(t); } }
+};
+const REF_MIN_SPEND = 500;
+
+function importDingdongMetaRefPreview() { importMetaPerfRef_('鼎東策略', /香積麵|悅善廚/, false); }
+function importDingdongMetaRefApply() { importMetaPerfRef_('鼎東策略', /香積麵|悅善廚/, true); }
+
+function workSheetIdOf_(name) {
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const i = v[0].indexOf('工作 Sheet');
+  const row = v.find(function (r, k) { return k > 0 && r[0] === name; });
+  const m = row && String(row[i]).match(/\/d\/([^/]+)/);
+  return m ? m[1] : '';
+}
+
+function importMetaPerfRef_(name, exclude, apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const act = metaActOf_(name);
+  const wid = workSheetIdOf_(name);
+  if (!/^act_\d+$/.test(act)) { Logger.log('找不到「' + name + '」的 Meta 帳號 ID，先停'); return; }
+  if (!wid) { Logger.log('客戶清單裡「' + name + '」還沒有工作 Sheet，先建工作 Sheet'); return; }
+  const ref = SpreadsheetApp.openById(wid).getSheetByName('參考資料');
+
+  const fields = 'name,campaign{name,objective},creative{body,title,object_story_spec{link_data{message,name},video_data{message,title}},asset_feed_spec{bodies,titles}},insights.date_preset(maximum){spend,actions}';
+  let page = metaGet_(act + '/ads', { fields: fields, limit: 100 });
+  const merged = {};
+  let excluded = 0, noGoal = 0;
+  for (let i = 0; i < 20; i++) {
+    (page.data || []).forEach(function (ad) {
+      const camp = ad.campaign || {};
+      if (exclude && (exclude.test(ad.name) || exclude.test(camp.name || ''))) { excluded++; return; }
+      const g = REF_GOALS[camp.objective];
+      if (!g) { noGoal++; return; }
+      const ins = ad.insights && ad.insights.data && ad.insights.data[0] || {};
+      let res = 0;
+      (ins.actions || []).forEach(function (x) { if (g.test(x.action_type)) res += Number(x.value); });
+      const t = adText_(ad.creative);
+      const key = camp.objective + '｜' + ad.name;
+      const m = merged[key] || (merged[key] = { name: ad.name, goal: camp.objective, spend: 0, res: 0, body: '', title: '' });
+      m.spend += Number(ins.spend || 0); m.res += res;
+      if (!m.body && t.body) { m.body = t.body; m.title = t.title || ''; }
+    });
+    if (!page.paging || !page.paging.next) break;
+    page = metaGet_(page.paging.next);
+  }
+
+  const list = Object.keys(merged).map(function (k) { return merged[k]; });
+  const noText = list.filter(function (m) { return !m.body; }).length;
+  const good = {};
+  Object.keys(REF_GOALS).forEach(function (goal) {
+    const ok = list.filter(function (m) { return m.goal === goal && m.body && m.spend >= REF_MIN_SPEND && m.res > 0; })
+      .sort(function (a, b) { return a.spend / a.res - b.spend / b.res; });
+    const top = Math.ceil(ok.length / 4);
+    ok.slice(0, top).forEach(function (m) { good[m.goal + '｜' + m.name] = 1; });
+    Logger.log(tag + '【' + REF_GOALS[goal].label + '】合併後 ' + list.filter(function (m) { return m.goal === goal; }).length + ' 則｜可比較 ' + ok.length + '｜成效好 ' + top);
+  });
+
+  const seen = {};
+  if (ref.getLastRow() > 1) ref.getRange(2, 4, ref.getLastRow() - 1, 1).getValues().forEach(function (r) { seen[String(r[0])] = 1; });
+  const today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
+  const fmt = function (x) { return Math.round(x).toLocaleString('en-US'); };
+  const out = []; let dup = 0;
+  list.filter(function (m) { return m.body; }).sort(function (a, b) {
+    const ga = good[a.goal + '｜' + a.name] ? 0 : 1, gb = good[b.goal + '｜' + b.name] ? 0 : 1;
+    return ga - gb || b.spend - a.spend;
+  }).forEach(function (m) {
+    const content = '【主要文字】\n' + String(m.body).trim() + (m.title ? '\n【標題】' + String(m.title).trim() : '');
+    if (seen[content]) { dup++; return; }
+    seen[content] = 1;
+    const g = REF_GOALS[m.goal];
+    const note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + g.metric + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
+    out.push([good[m.goal + '｜' + m.name] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）']);
+  });
+
+  Logger.log(tag + '排除品牌 ' + excluded + ' 則｜活動目標不在三組內 ' + noGoal + ' 則｜沒抓到文案 ' + noText + ' 則｜重複略過 ' + dup + ' 則');
+  Logger.log(tag + '可寫入 ' + out.length + ' 則（成效好 ' + out.filter(function (r) { return r[0] === '成效好'; }).length + '）');
+  out.filter(function (r) { return r[0] === '成效好'; }).forEach(function (r) { Logger.log(tag + '成效好｜' + r[4] + '｜' + r[5]); });
+  if (!apply || !out.length) return;
+  ref.getRange(ref.getLastRow() + 1, 1, out.length, 8).setValues(out);
+  ref.getRange(2, 4, ref.getLastRow() - 1, 1).setWrap(true);
+  ref.setColumnWidth(4, 480);
+  Logger.log('已寫入 ' + out.length + ' 則到參考資料');
+}
