@@ -45,3 +45,21 @@ function inspectMasterHeaderRow() {
   Logger.log('欄名在第 ' + (hi + 1) + ' 列');
   v[hi].forEach(function (h, j) { if (h || cc[j]) Logger.log((j + 1) + '. ' + (h || '（無欄名）') + ' ＝ ' + (cc[j] || '')); });
 }
+
+
+const HUB_FOLDER_ID = '1KUHIBniAvIMyd4UDBlTrtMpOuMmnVWju';
+
+// 只讀：檢查總表資料夾的名稱、擁有者（共用雲端硬碟的檔案沒有個人擁有者）、裡面已有的東西
+function inspectHubFolder() {
+  const fo = DriveApp.getFolderById(HUB_FOLDER_ID);
+  const owner = fo.getOwner();
+  Logger.log('資料夾：' + fo.getName());
+  Logger.log('擁有者：' + (owner ? owner.getEmail() + '（在個人雲端硬碟）' : '無個人擁有者（在共用雲端硬碟）'));
+  Logger.log('上層：' + (fo.getParents().hasNext() ? fo.getParents().next().getName() : '（無）'));
+  const files = fo.getFiles(); const fl = [];
+  while (files.hasNext() && fl.length < 20) fl.push(files.next().getName());
+  const subs = fo.getFolders(); const sl = [];
+  while (subs.hasNext() && sl.length < 20) sl.push(subs.next().getName());
+  Logger.log('檔案：' + (fl.join('、') || '（空）'));
+  Logger.log('子資料夾：' + (sl.join('、') || '（空）'));
+}
