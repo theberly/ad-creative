@@ -4,7 +4,7 @@ const WS_TABS = {
   '設定': ['欄位', '內容'],
   '參考資料': ['類型（成效好／客戶提供／僅供參考）', '平台', '格式', '內容', '來源／連結', '成效備註', '加入日期', '加入者', '活動'],
   '需求': ['需求編號', '建立時間', '操作者', '平台', '活動名稱', '格式', '受眾', '組數', '產品／服務', '活動目標', '到達網址', '補充說明', '狀態'],
-  '產出': ['需求編號', '產出時間', '平台', '格式', '欄位', '序號', '受眾', '文案', '字數（半形計）', '上限', '是否超限', '審核警示', '確認狀態', '確認者', '確認時間', '修正版文案']
+  '產出': ['需求編號', '產出時間', '平台', '格式', '序號', '受眾', '文案', '標題', '說明', 'CTA', '到達網址', '字數（文案／標題／說明）', '是否超限', '審核警示', '確認狀態', '確認者', '確認時間', '修改備註']
 };
 const WS_SETTING_KEYS = ['客戶名稱', 'Google 帳號 ID', 'Meta 帳號 ID', '品牌語氣', '必提賣點', '禁用字詞', '素材資料夾連結', 'Meta 進稿表連結', 'Google 進稿表連結', '備註'];
 
@@ -81,7 +81,7 @@ function createWorkSheet_(name, apply) {
   const dv = function (vals) { return SpreadsheetApp.newDataValidation().requireValueInList(vals, true).setAllowInvalid(false).build(); };
   nss.getSheetByName('參考資料').getRange(2, 1, 999, 1).setDataValidation(dv(['成效好', '客戶提供', '僅供參考']));
   nss.getSheetByName('參考資料').getRange(2, 2, 999, 1).setDataValidation(dv(['Google', 'Meta', '共用']));
-  nss.getSheetByName('產出').getRange(2, 13, 999, 1).setDataValidation(dv(['待確認', '已確認', '退回']));
+  nss.getSheetByName('產出').getRange(2, WS_TABS['產出'].indexOf('確認狀態') + 1, 999, 1).setDataValidation(dv(['待確認', '已確認', '退回']));
 
   Logger.log('開發中先不共用，之後會共用給：' + (emails.join('、') || '（無）'));
 
@@ -134,6 +134,27 @@ function upgradeWorkSheets_(apply) {
       ref.getRange(2, 1, n, rh.length).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP).setVerticalAlignment('top');
       ref.setRowHeightsForced(2, n, 21);
     }
+
+    const po = ss.getSheetByName('產出');
+    const wantP = WS_TABS['產出'];
+    const ph = po.getRange(1, 1, 1, po.getLastColumn()).getValues()[0];
+    if (ph.join('|') !== wantP.join('|')) {
+      const hasData = po.getLastRow() > 1;
+      Logger.log(tag + name + '｜產出改成新版欄位' + (hasData ? '（舊資料移到「產出_舊版」）' : ''));
+      if (apply) {
+        let target = po;
+        if (hasData) {
+          po.setName('產出_舊版' + (ss.getSheetByName('產出_舊版') ? '_' + Date.now() : ''));
+          target = ss.insertSheet('產出', po.getIndex());
+        } else {
+          po.clear();
+          po.getRange(1, 1, po.getMaxRows(), po.getMaxColumns()).clearDataValidations();
+        }
+        target.getRange(1, 1, 1, wantP.length).setValues([wantP]).setFontWeight('bold');
+        target.setFrozenRows(1);
+        target.getRange(2, wantP.indexOf('確認狀態') + 1, 999, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['待確認', '已確認', '退回'], true).setAllowInvalid(false).build());
+      }
+    } else { Logger.log(tag + name + '｜產出欄位已是最新'); }
 
     const dq = ss.getSheetByName('需求');
     const wantD = WS_TABS['需求'];
