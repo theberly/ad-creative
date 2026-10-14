@@ -93,3 +93,32 @@ function inspectMetaPerfByClient_(name) {
 }
 
 function inspectDingdongMetaPerf() { inspectMetaPerfByClient_('鼎東策略'); }
+
+
+// 只讀：鼎東每個行銷活動的目標，以及各目標下 actions 的所有種類與加總（不挑不濾）
+function probeDingdongActions() {
+  const act = metaActOf_('鼎東策略');
+  let page = metaGet_(act + '/campaigns', { fields: 'name,objective,insights.date_preset(maximum){spend,actions}', limit: 100 });
+  const byObj = {};
+  let kept = 0, dropped = [];
+  for (let i = 0; i < 10; i++) {
+    (page.data || []).forEach(function (c) {
+      if (c.name.indexOf('鼎東') < 0) { dropped.push(c.name); return; }
+      kept++;
+      const ins = c.insights && c.insights.data && c.insights.data[0] || {};
+      const o = byObj[c.objective] || (byObj[c.objective] = { n: 0, spend: 0, acts: {} });
+      o.n++; o.spend += Number(ins.spend || 0);
+      (ins.actions || []).forEach(function (a) { o.acts[a.action_type] = (o.acts[a.action_type] || 0) + Number(a.value); });
+    });
+    if (!page.paging || !page.paging.next) break;
+    page = metaGet_(page.paging.next);
+  }
+  Logger.log('鼎東活動 ' + kept + ' 個｜排除 ' + dropped.length + ' 個：' + dropped.slice(0, 10).join('、') + (dropped.length > 10 ? '…' : ''));
+  Object.keys(byObj).forEach(function (k) {
+    const o = byObj[k];
+    Logger.log('【' + k + '】活動 ' + o.n + ' 個｜花費 ' + Math.round(o.spend));
+    Object.keys(o.acts).sort(function (a, b) { return o.acts[b] - o.acts[a]; }).forEach(function (t) {
+      Logger.log('　' + t + '：' + o.acts[t]);
+    });
+  });
+}
