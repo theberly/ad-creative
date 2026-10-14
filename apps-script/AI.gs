@@ -44,3 +44,20 @@ function testGemini() {
   if (names.indexOf(geminiModel_()) < 0) return;
   Logger.log('測試回覆：' + callAI_('用一句繁體中文介紹你自己，20 字以內。', { temperature: 0.2 }));
 }
+
+
+// 只讀：逐一試幾個模型能不能產文字（每個只送一句很短的提示）
+function tryGeminiModels() {
+  const list = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-pro-latest'];
+  list.forEach(function (m) {
+    const res = UrlFetchApp.fetch(GEMINI_BASE + 'models/' + m + ':generateContent', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { 'x-goog-api-key': geminiKey_() },
+      payload: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: '回覆「好」一個字' }] }] })
+    });
+    const j = JSON.parse(res.getContentText());
+    if (j.error) { Logger.log('✗ ' + m + '｜' + res.getResponseCode() + '｜' + j.error.message.slice(0, 120)); return; }
+    const c = j.candidates && j.candidates[0];
+    Logger.log('✓ ' + m + '｜' + (c && c.content && c.content.parts ? c.content.parts.map(function (p) { return p.text || ''; }).join('').trim() : '（無內容）'));
+  });
+}
