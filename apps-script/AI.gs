@@ -13,6 +13,20 @@ function geminiModel_() {
 
 // 送出提示，回傳文字。opts.json=true 時要求模型回傳 JSON
 function callAI_(prompt, opts) {
+  const busy = /high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED|try again later/i;
+  const waits = [0, 5000, 10000];
+  let last;
+  for (let i = 0; i < waits.length; i++) {
+    if (waits[i]) Utilities.sleep(waits[i]);
+    try { return callGeminiOnce_(prompt, opts, geminiModel_()); }
+    catch (e) { last = e; if (!busy.test(e.message)) throw e; Logger.log('Gemini 忙線，第 ' + (i + 1) + ' 次重試前等待…'); }
+  }
+  const fb = PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL') || 'gemini-3.6-flash';
+  Logger.log('改用備用模型：' + fb);
+  try { return callGeminiOnce_(prompt, opts, fb); } catch (e) { throw new Error(last.message + '（備用模型也失敗：' + e.message + '）'); }
+}
+
+function callGeminiOnce_(prompt, opts, model) {
   opts = opts || {};
   const body = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -20,7 +34,7 @@ function callAI_(prompt, opts) {
   };
   if (opts.system) body.systemInstruction = { parts: [{ text: opts.system }] };
   if (opts.json) body.generationConfig.responseMimeType = 'application/json';
-  const res = UrlFetchApp.fetch(GEMINI_BASE + 'models/' + geminiModel_() + ':generateContent', {
+  const res = UrlFetchApp.fetch(GEMINI_BASE + 'models/' + model + ':generateContent', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { 'x-goog-api-key': geminiKey_() }, payload: JSON.stringify(body)
   });
