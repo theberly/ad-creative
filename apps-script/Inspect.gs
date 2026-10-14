@@ -34,3 +34,14 @@ function inspectMasterHeaders() {
   }
   Logger.log('客戶 A 欄：' + v.slice(1).map(function (r) { return r[0]; }).filter(String).join('、'));
 }
+
+
+// 只讀：列出 A 欄＝報表單位 那一列的每個欄名，以及創創那列對應的值
+function inspectMasterHeaderRow() {
+  const v = SpreadsheetApp.openById(SETTINGS_ID).getSheetByName('客戶主檔').getDataRange().getDisplayValues();
+  const hi = v.findIndex(function (r) { return r[0] === '報表單位'; });
+  if (hi < 0) { Logger.log('找不到 A 欄＝報表單位'); return; }
+  const cc = v.find(function (r) { return r[0] === '創創'; }) || [];
+  Logger.log('欄名在第 ' + (hi + 1) + ' 列');
+  v[hi].forEach(function (h, j) { if (h || cc[j]) Logger.log((j + 1) + '. ' + (h || '（無欄名）') + ' ＝ ' + (cc[j] || '')); });
+}
