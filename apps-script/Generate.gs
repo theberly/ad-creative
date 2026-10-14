@@ -84,8 +84,9 @@ function generate_(name, apply) {
       '2. 主要文字：前三行要抓住注意力；中段用 3 個重點條列；分段之間空一行；結尾一句行動呼籲。',
       '3. 不可出現禁用字詞，也不可用誇大或保證式用語（例如：第一、100%、保證、最有效）。',
       '4. 不要寫網址或「點連結」之類的字。',
-      '5. 不要編造需求裡沒有的價格、日期、名額、數字；需求有寫的才可以用。',
-      '6. ' + n + ' 組的切角要不同。',
+      '5. 只能使用【客戶設定】與【這次的需求】裡寫到的事實（價格、日期、名額、資格、補助、課程內容、數字）。參考文案裡的事實不可沿用，只學寫法。',
+      '6. 需要但沒提供的事實，寫成【待確認：項目】，例如【待確認：課程內容】，不要自己補。',
+      '7. ' + n + ' 組的切角要不同。',
       '',
       '只回傳 JSON，格式：{"sets":[{' + spec.fields.map(function (f) { return '"' + f[0] + '":"…"'; }).join(',') + '}]}'
     ].join('\n');
@@ -106,7 +107,8 @@ function generate_(name, apply) {
         const len = halfLen_(text);
         const over = f[1] && len > f[1] ? '超限' : '';
         const warn = banned.filter(function (w) { return text.indexOf(w) >= 0; }).map(function (w) { return '禁用：' + w; })
-          .concat(risky.filter(function (w) { return text.indexOf(w) >= 0; }).map(function (w) { return '誇大：' + w; })).join('、');
+          .concat(risky.filter(function (w) { return text.indexOf(w) >= 0; }).map(function (w) { return '誇大：' + w; }))
+          .concat(text.indexOf('【待確認') >= 0 ? ['有待確認項目'] : []).join('、');
         out.push([id, now, col(r, '平台'), fmt, f[0], si + 1, col(r, '受眾'), text, len, f[1] || '', over, warn, '待確認', '', '', '']);
         Logger.log(tag + '第 ' + (si + 1) + ' 組｜' + f[0] + '｜' + len + (f[1] ? '/' + f[1] : '') + (over ? '｜超限' : '') + (warn ? '｜' + warn : '') + '\n' + text);
       });
