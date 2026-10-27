@@ -169,3 +169,22 @@ function upgradeWorkSheets_(apply) {
     }
   });
 }
+
+
+// 一次替客戶清單裡「服務中、還沒有工作 Sheet」的客戶建立工作 Sheet（不共用）
+function createAllWorkSheetsPreview() { createAllWorkSheets_(false); }
+function createAllWorkSheetsApply() { createAllWorkSheets_(true); }
+
+function createAllWorkSheets_(apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const h = v[0], iS = h.indexOf('狀態'), iW = h.indexOf('工作 Sheet');
+  const todo = v.slice(1).filter(function (r) { return r[0] && r[iS] === '服務中' && !r[iW]; }).map(function (r) { return r[0]; });
+  Logger.log(tag + '要建立 ' + todo.length + ' 家：' + todo.join('、'));
+  if (!apply) return;
+  todo.forEach(function (name) {
+    try { createWorkSheet_(name, true); }
+    catch (e) { Logger.log('✗ ' + name + ' 建立失敗：' + e.message); }
+  });
+  Logger.log('完成');
+}
