@@ -1,8 +1,10 @@
 // 從 Meta 廣告直接匯入參考資料：文案＋成效，依活動目標分組比成本，前 1/4 標「成效好」
+// 銷售／名單會自動挑這個客戶實際有數字的成果（購買 > 完成註冊 > 名單 > 瀏覽內容）
+// 其他目標（觸及、互動、影片觀看…）也匯入，但只標「僅供參考」、不排名
 const REF_GOALS = {
-  OUTCOME_TRAFFIC: { label: '流量', metric: '頁面瀏覽', test: function (t) { return t === 'landing_page_view'; } },
-  OUTCOME_SALES: { label: '銷售', metric: '完成註冊', test: function (t) { return t === 'complete_registration'; } },
-  OUTCOME_LEADS: { label: '名單', metric: '名單', test: function (t) { return t === 'lead' || /lead_grouped/.test(t); } }
+  OUTCOME_TRAFFIC: { label: '流量', metrics: [['landing_page_view', '頁面瀏覽']] },
+  OUTCOME_SALES: { label: '銷售', metrics: [['purchase', '購買'], ['complete_registration', '完成註冊'], ['lead', '名單'], ['view_content', '瀏覽內容']] },
+  OUTCOME_LEADS: { label: '名單', metrics: [['lead', '名單'], ['complete_registration', '完成註冊']] }
 };
 const REF_MIN_SPEND = 500;
 
@@ -17,6 +19,17 @@ function workSheetIdOf_(name) {
   return m ? m[1] : '';
 }
 
+// action_type 正規化：同一成果的像素、omni、站內版本取最大值，不重複加總
+function normActs_(list) {
+  const o = {};
+  (list || []).forEach(function (a) {
+    let k = String(a.action_type).replace(/^offsite_conversion\.fb_pixel_/, '').replace(/^omni_/, '').replace(/^onsite_conversion\./, '');
+    if (/^lead(gen)?_grouped$/.test(k)) k = 'lead';
+    o[k] = Math.max(o[k] || 0, Number(a.value) || 0);
+  });
+  return o;
+}
+
 function importMetaPerfRef_(name, exclude, apply) {
   const tag = apply ? '' : '[預覽] ';
   const act = metaActOf_(name);
@@ -28,20 +41,20 @@ function importMetaPerfRef_(name, exclude, apply) {
   const fields = 'name,campaign{name,objective},creative{body,title,object_story_spec{link_data{message,name},video_data{message,title}},asset_feed_spec{bodies,titles}},insights.date_preset(maximum){spend,actions}';
   let page = metaGet_(act + '/ads', { fields: fields, limit: 100 });
   const merged = {};
-  let excluded = 0, noGoal = 0;
-  for (let i = 0; i < 20; i++) {
+  let excluded = 0;
+  for (let i = 0; i < 30; i++) {
     (page.data || []).forEach(function (ad) {
       const camp = ad.campaign || {};
       if (exclude && (exclude.test(ad.name) || exclude.test(camp.name || ''))) { excluded++; return; }
-      const g = REF_GOALS[camp.objective];
-      if (!g) { noGoal++; return; }
+      const goal = REF_GOALS[camp.objective] ? camp.objective : 'OTHER';
       const ins = ad.insights && ad.insights.data && ad.insights.data[0] || {};
-      let res = 0;
-      (ins.actions || []).forEach(function (x) { if (g.test(x.action_type)) res += Number(x.value); });
+      const na = normActs_(ins.actions);
       const t = adText_(ad.creative);
-      const key = camp.objective + '｜' + ad.name;
-      const m = merged[key] || (merged[key] = { name: ad.name, goal: camp.objective, spend: 0, res: 0, body: '', title: '', camps: {} });
-      m.spend += Number(ins.spend || 0); m.res += res; if (camp.name) m.camps[camp.name] = 1;
+      const key = goal + '｜' + ad.name;
+      const m = merged[key] || (merged[key] = { name: ad.name, goal: goal, obj: camp.objective || '', spend: 0, acts: {}, body: '', title: '', camps: {} });
+      m.spend += Number(ins.spend || 0);
+      Object.keys(na).forEach(function (k) { m.acts[k] = (m.acts[k] || 0) + na[k]; });
+      if (camp.name) m.camps[camp.name] = 1;
       if (!m.body && t.body) { m.body = t.body; m.title = t.title || ''; }
     });
     if (!page.paging || !page.paging.next) break;
@@ -50,14 +63,20 @@ function importMetaPerfRef_(name, exclude, apply) {
 
   const list = Object.keys(merged).map(function (k) { return merged[k]; });
   const noText = list.filter(function (m) { return !m.body; }).length;
-  const good = {};
+  const pick = {}, good = {};
   Object.keys(REF_GOALS).forEach(function (goal) {
-    const ok = list.filter(function (m) { return m.goal === goal && m.body && m.spend >= REF_MIN_SPEND && m.res > 0; })
+    const g = REF_GOALS[goal], inGoal = list.filter(function (m) { return m.goal === goal; });
+    const mt = g.metrics.find(function (x) { return inGoal.some(function (m) { return (m.acts[x[0]] || 0) > 0; }); }) || g.metrics[0];
+    pick[goal] = mt;
+    inGoal.forEach(function (m) { m.res = m.acts[mt[0]] || 0; });
+    const ok = inGoal.filter(function (m) { return m.body && m.spend >= REF_MIN_SPEND && m.res > 0; })
       .sort(function (a, b) { return a.spend / a.res - b.spend / b.res; });
     const top = Math.ceil(ok.length / 4);
     ok.slice(0, top).forEach(function (m) { good[m.goal + '｜' + m.name] = 1; });
-    Logger.log(tag + '【' + REF_GOALS[goal].label + '】合併後 ' + list.filter(function (m) { return m.goal === goal; }).length + ' 則｜可比較 ' + ok.length + '｜成效好 ' + top);
+    if (inGoal.length) Logger.log(tag + '【' + g.label + '｜看' + mt[1] + '】合併後 ' + inGoal.length + ' 則｜可比較 ' + ok.length + '｜成效好 ' + top);
   });
+  const others = list.filter(function (m) { return m.goal === 'OTHER'; });
+  if (others.length) Logger.log(tag + '【其他目標】' + others.length + ' 則（只匯入，不排名）');
 
   const seen = {};
   if (ref.getLastRow() > 1) ref.getRange(2, 4, ref.getLastRow() - 1, 1).getValues().forEach(function (r) { seen[String(r[0])] = 1; });
@@ -71,21 +90,26 @@ function importMetaPerfRef_(name, exclude, apply) {
     const content = '【主要文字】\n' + String(m.body).trim() + (m.title ? '\n【標題】' + String(m.title).trim() : '');
     if (seen[content]) { dup++; return; }
     seen[content] = 1;
-    const g = REF_GOALS[m.goal];
-    const note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + g.metric + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
+    let note;
+    if (m.goal === 'OTHER') note = '其他目標（' + String(m.obj).replace('OUTCOME_', '') + '）｜花費 ' + fmt(m.spend);
+    else {
+      const g = REF_GOALS[m.goal], mt = pick[m.goal];
+      note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + mt[1] + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
+    }
     out.push([good[m.goal + '｜' + m.name] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）', Object.keys(m.camps).join('、')]);
   });
 
-  Logger.log(tag + '排除品牌 ' + excluded + ' 則｜活動目標不在三組內 ' + noGoal + ' 則｜沒抓到文案 ' + noText + ' 則｜重複略過 ' + dup + ' 則');
+  Logger.log(tag + '排除品牌 ' + excluded + ' 則｜沒抓到文案 ' + noText + ' 則｜重複略過 ' + dup + ' 則');
   Logger.log(tag + '可寫入 ' + out.length + ' 則（成效好 ' + out.filter(function (r) { return r[0] === '成效好'; }).length + '）');
-  out.filter(function (r) { return r[0] === '成效好'; }).forEach(function (r) { Logger.log(tag + '成效好｜' + r[4] + '｜' + r[5]); });
+  out.filter(function (r) { return r[0] === '成效好'; }).slice(0, 5).forEach(function (r) { Logger.log(tag + '成效好｜' + r[4] + '｜' + r[5]); });
   if (!apply || !out.length) return;
   ref.getRange(ref.getLastRow() + 1, 1, out.length, 9).setValues(out);
-  ref.getRange(2, 4, ref.getLastRow() - 1, 1).setWrap(true);
+  const n = ref.getLastRow() - 1;
+  ref.getRange(2, 1, n, 9).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP).setVerticalAlignment('top');
+  ref.setRowHeightsForced(2, n, 21);
   ref.setColumnWidth(4, 480);
   Logger.log('已寫入 ' + out.length + ' 則到參考資料');
 }
-
 
 // 已匯入的參考資料補填「活動」：用來源欄的廣告名稱，查 Meta 上它屬於哪個行銷活動
 function fillDingdongRefCampaignPreview() { fillRefCampaign_('鼎東策略', /香積麵|悅善廚/, false); }
