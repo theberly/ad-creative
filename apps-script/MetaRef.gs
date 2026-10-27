@@ -1,6 +1,9 @@
 // 從 Meta 廣告直接匯入參考資料：文案＋成效，依活動目標分組比成本，前 1/4 標「成效好」
 // 銷售／名單會自動挑這個客戶實際有數字的成果（購買 > 完成註冊 > 名單 > 瀏覽內容）
 // 其他目標（觸及、互動、影片觀看…）也匯入，但只標「僅供參考」、不排名
+// 廣告組合設定的轉換事件 → 用來比的成果
+const REF_EVENT = { PURCHASE: 'purchase', COMPLETE_REGISTRATION: 'complete_registration', LEAD: 'lead', CONTENT_VIEW: 'view_content', ADD_TO_CART: 'add_to_cart', INITIATED_CHECKOUT: 'initiate_checkout', CONTACT: 'contact', SUBMIT_APPLICATION: 'submit_application', SUBSCRIBE: 'subscribe' };
+const REF_METRIC_LABEL = { purchase: '購買', complete_registration: '完成註冊', lead: '名單', view_content: '瀏覽內容', add_to_cart: '加入購物車', initiate_checkout: '開始結帳', contact: '聯絡', submit_application: '送出申請', subscribe: '訂閱', landing_page_view: '頁面瀏覽' };
 const REF_GOALS = {
   OUTCOME_TRAFFIC: { label: '流量', metrics: [['landing_page_view', '頁面瀏覽']] },
   OUTCOME_SALES: { label: '銷售', metrics: [['purchase', '購買'], ['complete_registration', '完成註冊'], ['lead', '名單'], ['view_content', '瀏覽內容']] },
@@ -38,7 +41,7 @@ function importMetaPerfRef_(name, exclude, apply) {
   if (!wid) { Logger.log('客戶清單裡「' + name + '」還沒有工作 Sheet，先建工作 Sheet'); return; }
   const ref = SpreadsheetApp.openById(wid).getSheetByName('參考資料');
 
-  const fields = 'name,campaign{name,objective},creative{body,title,object_story_spec{link_data{message,name},video_data{message,title}},asset_feed_spec{bodies,titles}},insights.date_preset(maximum){spend,actions}';
+  const fields = 'name,campaign{name,objective},creative{body,title,object_story_spec{link_data{message,name},video_data{message,title}},asset_feed_spec{bodies,titles}},insights.date_preset(maximum){spend,actions},adset{promoted_object}';
   let page = metaGet_(act + '/ads', { fields: fields, limit: 100 });
   const merged = {};
   let excluded = 0;
@@ -50,8 +53,10 @@ function importMetaPerfRef_(name, exclude, apply) {
       const ins = ad.insights && ad.insights.data && ad.insights.data[0] || {};
       const na = normActs_(ins.actions);
       const t = adText_(ad.creative);
-      const key = goal + '｜' + ad.name;
-      const m = merged[key] || (merged[key] = { name: ad.name, goal: goal, obj: camp.objective || '', spend: 0, acts: {}, body: '', title: '', camps: {} });
+      const po = ad.adset && ad.adset.promoted_object || {};
+      const ev = goal === 'OTHER' ? '' : (REF_EVENT[po.custom_event_type] || '');
+      const key = goal + '｜' + ev + '｜' + ad.name;
+      const m = merged[key] || (merged[key] = { key: key, name: ad.name, goal: goal, ev: ev, obj: camp.objective || '', spend: 0, acts: {}, body: '', title: '', camps: {} });
       m.spend += Number(ins.spend || 0);
       Object.keys(na).forEach(function (k) { m.acts[k] = (m.acts[k] || 0) + na[k]; });
       if (camp.name) m.camps[camp.name] = 1;
@@ -63,17 +68,20 @@ function importMetaPerfRef_(name, exclude, apply) {
 
   const list = Object.keys(merged).map(function (k) { return merged[k]; });
   const noText = list.filter(function (m) { return !m.body; }).length;
-  const pick = {}, good = {};
-  Object.keys(REF_GOALS).forEach(function (goal) {
-    const g = REF_GOALS[goal], inGoal = list.filter(function (m) { return m.goal === goal; });
-    const mt = g.metrics.find(function (x) { return inGoal.some(function (m) { return (m.acts[x[0]] || 0) > 0; }); }) || g.metrics[0];
-    pick[goal] = mt;
-    inGoal.forEach(function (m) { m.res = m.acts[mt[0]] || 0; });
-    const ok = inGoal.filter(function (m) { return m.body && m.spend >= REF_MIN_SPEND && m.res > 0; })
+  const good = {};
+  const groups = {};
+  list.filter(function (m) { return m.goal !== 'OTHER'; }).forEach(function (m) { (groups[m.goal + '｜' + m.ev] || (groups[m.goal + '｜' + m.ev] = [])).push(m); });
+  Object.keys(groups).forEach(function (gk) {
+    const inG = groups[gk], goal = inG[0].goal, ev = inG[0].ev, g = REF_GOALS[goal];
+    let mt;
+    if (ev) mt = [ev, REF_METRIC_LABEL[ev] || ev];
+    else mt = g.metrics.find(function (x) { return inG.some(function (m) { return (m.acts[x[0]] || 0) > 0; }); }) || g.metrics[0];
+    inG.forEach(function (m) { m.mt = mt; m.res = m.acts[mt[0]] || 0; });
+    const ok = inG.filter(function (m) { return m.body && m.spend >= REF_MIN_SPEND && m.res > 0; })
       .sort(function (a, b) { return a.spend / a.res - b.spend / b.res; });
     const top = Math.ceil(ok.length / 4);
-    ok.slice(0, top).forEach(function (m) { good[m.goal + '｜' + m.name] = 1; });
-    if (inGoal.length) Logger.log(tag + '【' + g.label + '｜看' + mt[1] + '】合併後 ' + inGoal.length + ' 則｜可比較 ' + ok.length + '｜成效好 ' + top);
+    ok.slice(0, top).forEach(function (m) { good[m.key] = 1; });
+    Logger.log(tag + '【' + g.label + '｜看' + mt[1] + (ev ? '' : '（推測）') + '】合併後 ' + inG.length + ' 則｜可比較 ' + ok.length + '｜成效好 ' + top);
   });
   const others = list.filter(function (m) { return m.goal === 'OTHER'; });
   if (others.length) Logger.log(tag + '【其他目標】' + others.length + ' 則（只匯入，不排名）');
@@ -84,7 +92,7 @@ function importMetaPerfRef_(name, exclude, apply) {
   const fmt = function (x) { return Math.round(x).toLocaleString('en-US'); };
   const out = []; let dup = 0;
   list.filter(function (m) { return m.body; }).sort(function (a, b) {
-    const ga = good[a.goal + '｜' + a.name] ? 0 : 1, gb = good[b.goal + '｜' + b.name] ? 0 : 1;
+    const ga = good[a.key] ? 0 : 1, gb = good[b.key] ? 0 : 1;
     return ga - gb || b.spend - a.spend;
   }).forEach(function (m) {
     const content = '【主要文字】\n' + String(m.body).trim() + (m.title ? '\n【標題】' + String(m.title).trim() : '');
@@ -93,10 +101,10 @@ function importMetaPerfRef_(name, exclude, apply) {
     let note;
     if (m.goal === 'OTHER') note = '其他目標（' + String(m.obj).replace('OUTCOME_', '') + '）｜花費 ' + fmt(m.spend);
     else {
-      const g = REF_GOALS[m.goal], mt = pick[m.goal];
+      const g = REF_GOALS[m.goal], mt = m.mt;
       note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + mt[1] + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
     }
-    out.push([good[m.goal + '｜' + m.name] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）', Object.keys(m.camps).join('、')]);
+    out.push([good[m.key] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）', Object.keys(m.camps).join('、')]);
   });
 
   Logger.log(tag + '排除品牌 ' + excluded + ' 則｜沒抓到文案 ' + noText + ' 則｜重複略過 ' + dup + ' 則');
