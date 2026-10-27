@@ -4,7 +4,7 @@
 // GET  ?action=results&code=…&client=…&id=…   某次需求的產出（id 空白＝最新一筆）
 // POST {action:'generate', code, client, request:{平台,活動名稱,格式,受眾,組數,產品／服務,活動目標,到達網址,補充說明}}
 const API_REQ_FIELDS = ['平台', '活動名稱', '格式', '受眾', '組數', '產品／服務', '活動目標', '到達網址', '補充說明'];
-const API_OUT_FIELDS = ['需求編號', '序號', '受眾', '文案', '標題', '說明', 'CTA', '到達網址', '字數（文案／標題／說明）', '是否超限', '審核警示', '確認狀態'];
+const API_OUT_FIELDS = ['需求編號', '格式', '序號', '受眾', '文案', '標題', '說明', 'CTA', '到達網址', '字數（文案／標題／說明）', '是否超限', '審核警示', '確認狀態'];
 
 function doGet(e) { return json_(handle_((e && e.parameter) || {})); }
 function doPost(e) {

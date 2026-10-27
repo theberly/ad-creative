@@ -348,7 +348,7 @@ function renderResults(box, d) {
     var s = el('div', null, 'set'), head = el('div', null, 'head'), left = el('div');
     left.appendChild(el('strong', '第 ' + r['序號'] + ' 組　'));
     left.appendChild(el('span', r['確認狀態'] || '待確認', 'badge' + (r['確認狀態'] === '已確認' ? '' : ' amber')));
-    var rsa = r['格式'] === 'Google RSA';
+    var rsa = r['格式'] === 'Google RSA' || (!r['文案'] && String(r['標題'] || '').split('\n').length > 3);
     if (!rsa) left.appendChild(el('span', 'CTA ' + (r['CTA'] || '—'), 'badge'));
     left.appendChild(el('span', '字數 ' + r['字數（文案／標題／說明）'], 'badge'));
     if (r['是否超限']) left.appendChild(el('span', '超限 ' + r['是否超限'], 'badge warn'));
