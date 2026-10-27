@@ -129,3 +129,48 @@ function fillRefCampaign_(name, exclude, apply) {
   });
   Logger.log(tag + '補填活動 ' + k + ' 列｜找不到對應 ' + miss + ' 列');
 }
+
+
+// 各客戶要排除的品牌（廣告或活動名稱符合就不匯入）
+const REF_EXCLUDE = { '鼎東策略': /香積麵|悅善廚/ };
+
+// 一次處理全部：有工作 Sheet、有 Meta 帳號、參考資料還是空的客戶
+function importAllMetaRefPreview() { importAllMetaRef_(false); }
+function importAllMetaRefApply() { importAllMetaRef_(true); }
+
+function importAllMetaRef_(apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const iW = v[0].indexOf('工作 Sheet');
+  const t0 = Date.now();
+  let stop = false;
+  v.slice(1).forEach(function (r) {
+    const name = r[0];
+    if (!name || !r[iW]) return;
+    const act = metaActOf_(name);
+    if (!/^act_\d+$/.test(act)) { Logger.log('— ' + name + '：沒有 Meta 帳號，略過'); return; }
+    const wid = workSheetIdOf_(name);
+    const ref = SpreadsheetApp.openById(wid).getSheetByName('參考資料');
+    if (ref.getLastRow() > 1) { Logger.log('— ' + name + '：參考資料已有 ' + (ref.getLastRow() - 1) + ' 列，略過'); return; }
+    if (stop) return;
+    if (Date.now() - t0 > 270000) { Logger.log('⏸ 時間快到了，' + name + ' 之後的客戶請再跑一次'); stop = true; return; }
+    Logger.log('=== ' + name + '｜' + act);
+    try {
+      if (!apply) {
+        let page = metaGet_(act + '/campaigns', { fields: 'name,objective,insights.date_preset(maximum){spend}', limit: 100 });
+        const camps = [];
+        for (let i = 0; i < 5; i++) {
+          (page.data || []).forEach(function (c) { const ins = c.insights && c.insights.data && c.insights.data[0] || {}; camps.push({ n: c.name, o: c.objective, s: Number(ins.spend || 0) }); });
+          if (!page.paging || !page.paging.next) break;
+          page = metaGet_(page.paging.next);
+        }
+        camps.sort(function (a, b) { return b.s - a.s; });
+        Logger.log(tag + '活動 ' + camps.length + ' 個（花費前 8）：' + camps.slice(0, 8).map(function (c) { return c.n + '〔' + c.o.replace('OUTCOME_', '') + '〕'; }).join('｜'));
+      }
+      importMetaPerfRef_(name, REF_EXCLUDE[name] || null, apply);
+    } catch (e) {
+      Logger.log('✗ ' + name + '：' + e.message);
+    }
+  });
+  Logger.log('全部處理完');
+}
