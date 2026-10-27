@@ -18,7 +18,7 @@ function callAI_(prompt, opts) {
   let last;
   for (let i = 0; i < waits.length; i++) {
     if (waits[i]) Utilities.sleep(waits[i]);
-    try { return callGeminiOnce_(prompt, opts, geminiModel_()); }
+    try { return callGeminiOnce_(prompt, opts, (opts && opts.model) || geminiModel_()); }
     catch (e) { last = e; if (!busy.test(e.message)) throw e; Logger.log('Gemini 忙線，第 ' + (i + 1) + ' 次重試前等待…'); }
   }
   const fb = PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL') || 'gemini-3.6-flash';

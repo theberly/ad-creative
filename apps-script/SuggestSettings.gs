@@ -1,4 +1,5 @@
 // 用各家「參考資料」的既有廣告文案，請 AI 歸納設定建議（品牌語氣、必提賣點、備註）
+// 主模型這時段常卡好幾分鐘，這裡直接用備用（較快）模型
 // 只寫在設定分頁的 C 欄「AI 建議」，不動 B 欄內容；C 欄已有建議就略過
 const SUGGEST_KEYS = ['品牌語氣', '必提賣點', '備註'];
 
@@ -42,7 +43,7 @@ function suggestSettings_(apply, only) {
     const hit = cache.get('suggest|' + name);
     if (hit) { out = JSON.parse(hit); Logger.log('（' + name + ' 沿用剛才預覽的結果）'); }
     else try {
-      const txt = callAI_(prompt, { json: true, temperature: 0.3, system: '你是台灣的資深廣告文案，擅長從既有廣告歸納品牌調性。' });
+      const txt = callAI_(prompt, { json: true, temperature: 0.3, model: PropertiesService.getScriptProperties().getProperty('GEMINI_FALLBACK_MODEL') || 'gemini-3.5-flash-lite', system: '你是台灣的資深廣告文案，擅長從既有廣告歸納品牌調性。' });
       out = JSON.parse(txt.replace(/^\s*```(?:json)?|```\s*$/g, ''));
       cache.put('suggest|' + name, JSON.stringify(out), 21600);
     } catch (e) { Logger.log('✗ ' + name + '：' + e.message); continue; }
