@@ -10,11 +10,12 @@ function suggestSettings_(apply, only) {
   const t0 = Date.now();
   const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
   const iW = v[0].indexOf('工作 Sheet');
-  let done = 0;
+  let done = 0, slow = 0;
+  const cache = CacheService.getScriptCache();
   for (let k = 1; k < v.length; k++) {
     const name = v[k][0];
     if (!name || !v[k][iW] || (only && name !== only)) continue;
-    if (Date.now() - t0 > 270000) { Logger.log('時間快到，先停在「' + name + '」之前，再執行一次會接著做'); break; }
+    if (Date.now() - t0 + slow * 1.2 > 330000) { Logger.log('時間快到，先停在「' + name + '」之前，再執行一次會接著做'); break; }
     const ss = SpreadsheetApp.openById(workSheetIdOf_(name));
     const st = ss.getSheetByName('設定');
     const sv = st.getDataRange().getDisplayValues();
@@ -24,7 +25,7 @@ function suggestSettings_(apply, only) {
     if (!rv.length) { Logger.log('— ' + name + '：參考資料是空的，略過'); continue; }
     const rank = { '成效好': 0, '客戶提供': 1, '僅供參考': 2 };
     rv.sort(function (a, b) { return (rank[a[0]] == null ? 3 : rank[a[0]]) - (rank[b[0]] == null ? 3 : rank[b[0]]); });
-    const ads = rv.slice(0, 40).map(function (r, i) { return (i + 1) + '.【' + r[0] + '】' + String(r[3]).slice(0, 400); }).join('\n\n');
+    const ads = rv.slice(0, 30).map(function (r, i) { return (i + 1) + '.【' + r[0] + '】' + String(r[3]).slice(0, 400); }).join('\n\n');
 
     const prompt = [
       '以下是客戶「' + name + '」過去實際投放的廣告文案（【成效好】是成效最好的一批）。',
@@ -37,13 +38,18 @@ function suggestSettings_(apply, only) {
     ].join('\n');
 
     let out;
-    try {
+    const t1 = Date.now();
+    const hit = cache.get('suggest|' + name);
+    if (hit) { out = JSON.parse(hit); Logger.log('（' + name + ' 沿用剛才預覽的結果）'); }
+    else try {
       const txt = callAI_(prompt, { json: true, temperature: 0.3, system: '你是台灣的資深廣告文案，擅長從既有廣告歸納品牌調性。' });
       out = JSON.parse(txt.replace(/^\s*```(?:json)?|```\s*$/g, ''));
+      cache.put('suggest|' + name, JSON.stringify(out), 21600);
     } catch (e) { Logger.log('✗ ' + name + '：' + e.message); continue; }
+    slow = Math.max(slow, Date.now() - t1);
 
     done++;
-    Logger.log(tag + '✓ ' + name + '（參考 ' + Math.min(rv.length, 40) + ' 則）\n' + SUGGEST_KEYS.map(function (x) { return '【' + x + '】' + (out[x] || '（無）'); }).join('\n'));
+    Logger.log(tag + '✓ ' + name + '（參考 ' + Math.min(rv.length, 30) + ' 則，AI 花 ' + Math.round((Date.now() - t1) / 1000) + ' 秒）\n' + SUGGEST_KEYS.map(function (x) { return '【' + x + '】' + (out[x] || '（無）'); }).join('\n'));
     if (!apply) continue;
     st.getRange(1, 3).setValue('AI 建議（從過去文案歸納，確認後請搬到 B 欄）').setFontWeight('bold');
     SUGGEST_KEYS.forEach(function (x) {
