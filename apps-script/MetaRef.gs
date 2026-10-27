@@ -102,7 +102,7 @@ function importMetaPerfRef_(name, exclude, apply) {
     if (m.goal === 'OTHER') note = '其他目標（' + String(m.obj).replace('OUTCOME_', '') + '）｜花費 ' + fmt(m.spend);
     else {
       const g = REF_GOALS[m.goal], mt = m.mt;
-      note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + mt[1] + ' ' + fmt(m.res) + (m.res ? '｜每次 ' + fmt(m.spend / m.res) + ' 元' : '');
+      note = g.label + '｜花費 ' + fmt(m.spend) + '｜' + mt[1] + ' ' + fmt(m.res) + (m.res ? '｜每次' + String(mt[1]).replace(/（.*?）/g, '') + ' ' + fmt(m.spend / m.res) + ' 元' : '');
     }
     out.push([good[m.key] ? '成效好' : '僅供參考', 'Meta', 'Meta 廣告', content, '廣告名稱：' + m.name, note, today, '程式匯入（Meta 成效）', Object.keys(m.camps).join('、')]);
   });

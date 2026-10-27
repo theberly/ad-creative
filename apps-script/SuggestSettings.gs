@@ -61,3 +61,60 @@ function suggestSettings_(apply, only) {
   }
   Logger.log(tag + (apply ? '已寫入 ' : '預覽 ') + done + ' 家');
 }
+
+
+// 把 C 欄 AI 建議搬進 B 欄（B 欄已有內容的不動），搬過的 C 欄清掉
+function moveSuggestToBPreview() { moveSuggestToB_(false); }
+function moveSuggestToBApply() { moveSuggestToB_(true); }
+
+function moveSuggestToB_(apply) {
+  const tag = apply ? '' : '[預覽] ';
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const iW = v[0].indexOf('工作 Sheet');
+  v.slice(1).forEach(function (r) {
+    const name = r[0];
+    if (!name || !r[iW]) return;
+    const st = SpreadsheetApp.openById(workSheetIdOf_(name)).getSheetByName('設定');
+    const sv = st.getDataRange().getDisplayValues();
+    const moved = [], kept = [];
+    sv.forEach(function (x, i) {
+      if (i === 0 || !String(x[2] || '').trim()) return;
+      if (String(x[1]).trim()) { kept.push(x[0]); return; }
+      moved.push(x[0]);
+      if (apply) { st.getRange(i + 1, 2).setValue(x[2]).setWrap(true); st.getRange(i + 1, 3).clearContent(); }
+    });
+    if (!moved.length && !kept.length) return;
+    if (apply && !kept.length) st.getRange(1, 3).clearContent();
+    Logger.log(tag + name + '：搬入 ' + (moved.join('、') || '（無）') + (kept.length ? '｜B 欄已有內容、保留 C 欄建議：' + kept.join('、') : ''));
+  });
+}
+
+// 舊的成效備註「每次 3 元」改成「每次頁面瀏覽 3 元」
+function fixRefCostLabelPreview() { fixRefCostLabel_(false); }
+function fixRefCostLabelApply() { fixRefCostLabel_(true); }
+
+function fixRefCostLabel_(apply) {
+  const v = SpreadsheetApp.getActive().getSheetByName('客戶清單').getDataRange().getDisplayValues();
+  const iW = v[0].indexOf('工作 Sheet');
+  let total = 0, sample = '';
+  v.slice(1).forEach(function (r) {
+    if (!r[0] || !r[iW]) return;
+    const sh = SpreadsheetApp.openById(workSheetIdOf_(r[0])).getSheetByName('參考資料');
+    const last = sh.getLastRow();
+    if (last < 2) return;
+    const rg = sh.getRange(2, 6, last - 1, 1);
+    let n = 0;
+    const vals = rg.getValues().map(function (x) {
+      const s = String(x[0]);
+      const t = s.replace(/｜([^｜]+?) ([\d,.]+)｜每次 ([\d,.]+) 元/, function (all, label, num, cost) {
+        return '｜' + label + ' ' + num + '｜每次' + label.replace(/（.*?）/g, '') + ' ' + cost + ' 元';
+      });
+      if (t !== s) { n++; if (!sample) sample = s + '  →  ' + t; }
+      return [t];
+    });
+    total += n;
+    if (n && apply) rg.setValues(vals);
+    if (n) Logger.log((apply ? '' : '[預覽] ') + r[0] + '：' + n + ' 列');
+  });
+  Logger.log((apply ? '已改 ' : '[預覽] 會改 ') + total + ' 列｜例：' + sample);
+}
