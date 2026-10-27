@@ -21,6 +21,7 @@ function suggestSettings_(apply, only) {
     const st = ss.getSheetByName('設定');
     const sv = st.getDataRange().getDisplayValues();
     if (sv.some(function (r) { return String(r[2] || '').trim() && r[0] !== '欄位'; })) { Logger.log('— ' + name + '：已有 AI 建議，略過'); continue; }
+    if (SUGGEST_KEYS.every(function (k) { const x = sv.find(function (r) { return r[0] === k; }); return x && String(x[1]).trim(); })) { Logger.log('— ' + name + '：B 欄都已填，略過'); continue; }
 
     const rv = ss.getSheetByName('參考資料').getDataRange().getDisplayValues().slice(1).filter(function (r) { return r[3]; });
     if (!rv.length) { Logger.log('— ' + name + '：參考資料是空的，略過'); continue; }
