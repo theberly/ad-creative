@@ -130,8 +130,8 @@ dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap}
 <div class="gen">
 <div class="card">
 <div class="row2">
-<div><label class="f" for="q_pf">平台</label><select id="q_pf"><option>Meta</option><option disabled>Google（即將支援）</option></select></div>
-<div><label class="f" for="q_fmt">格式</label><select id="q_fmt"><option>Meta 廣告</option><option disabled>Google RSA（即將支援）</option></select></div>
+<div><label class="f" for="q_pf">平台</label><select id="q_pf"><option>Meta</option><option>Google</option></select></div>
+<div><label class="f" for="q_fmt">格式</label><select id="q_fmt"><option>Meta 廣告</option><option>Google RSA</option></select></div>
 </div>
 <label class="f" for="q_act">活動名稱</label><input id="q_act" list="actList" placeholder="例：全通路餐飲"><datalist id="actList"></datalist>
 <label class="f" for="q_aud">受眾 *</label><textarea id="q_aud" placeholder="例：餐飲業老闆、店長（人手不夠、想用 AI 省力）"></textarea>
@@ -300,6 +300,14 @@ Array.prototype.forEach.call(document.querySelectorAll('#refChips button'), func
 $('refQ').addEventListener('input', renderRefs);
 
 function val(id) { return $(id).value.trim(); }
+// 平台與格式連動；Google RSA 一組就有 15 則標題＋4 則說明，組數預設 1
+function syncFmt(fromFmt) {
+  if (fromFmt) $('q_pf').value = $('q_fmt').value === 'Google RSA' ? 'Google' : 'Meta';
+  else $('q_fmt').value = $('q_pf').value === 'Google' ? 'Google RSA' : 'Meta 廣告';
+  $('q_n').value = $('q_fmt').value === 'Google RSA' ? '1' : '3';
+}
+$('q_pf').addEventListener('change', function () { syncFmt(false); });
+$('q_fmt').addEventListener('change', function () { syncFmt(true); });
 $('genBtn').addEventListener('click', function () {
   if (!cur || !curData || !curData.hasSheet) return;
   if (!val('q_aud')) { $('status').textContent = '請填受眾'; return; }
@@ -340,16 +348,35 @@ function renderResults(box, d) {
     var s = el('div', null, 'set'), head = el('div', null, 'head'), left = el('div');
     left.appendChild(el('strong', '第 ' + r['序號'] + ' 組　'));
     left.appendChild(el('span', r['確認狀態'] || '待確認', 'badge' + (r['確認狀態'] === '已確認' ? '' : ' amber')));
-    left.appendChild(el('span', 'CTA ' + (r['CTA'] || '—'), 'badge'));
+    var rsa = r['格式'] === 'Google RSA';
+    if (!rsa) left.appendChild(el('span', 'CTA ' + (r['CTA'] || '—'), 'badge'));
     left.appendChild(el('span', '字數 ' + r['字數（文案／標題／說明）'], 'badge'));
     if (r['是否超限']) left.appendChild(el('span', '超限 ' + r['是否超限'], 'badge warn'));
     String(r['審核警示'] || '').split('、').filter(Boolean).forEach(function (w) { left.appendChild(el('span', w, 'badge warn')); });
     head.appendChild(left);
-    var all = el('button', '全部複製（Tab 分隔）', 'small');
-    all.addEventListener('click', function () { copy([r['文案'], r['標題'], r['說明'], r['CTA'], r['到達網址']].map(tsvCell).join('\t')); });
+    var all = el('button', rsa ? '全部複製（標題 1–15、說明 1–4，一列）' : '全部複製（Tab 分隔）', 'small');
+    all.addEventListener('click', function () {
+      if (rsa) { var hs = String(r['標題'] || '').split('\n'), ds = String(r['說明'] || '').split('\n'), row = [];
+        for (var i = 0; i < 15; i++) row.push(hs[i] || ''); for (var j = 0; j < 4; j++) row.push(ds[j] || ''); copy(row.join('\t')); }
+      else copy([r['文案'], r['標題'], r['說明'], r['CTA'], r['到達網址']].map(tsvCell).join('\t'));
+    });
     head.appendChild(all); s.appendChild(head);
     [['文案', r['文案']], ['標題', r['標題']], ['說明', r['說明']], ['到達網址', r['到達網址']]].forEach(function (f) {
-      if (f[0] === '到達網址' && !f[1]) return;
+      if ((f[0] === '到達網址' || f[0] === '文案') && !f[1]) return;
+      if (rsa && f[1]) {
+        var fd2 = el('div', null, 'field'), lbl2 = el('div', null, 'lbl'), lines = String(f[1]).split('\n'), lim = f[0] === '標題' ? 30 : 90;
+        lbl2.appendChild(el('span', f[0] + '（' + lines.length + ' 則，上限 ' + lim + ' 半形字元）'));
+        var b2 = el('button', '複製', 'small'); b2.addEventListener('click', function () { copy(f[1]); }); lbl2.appendChild(b2);
+        fd2.appendChild(lbl2);
+        var tx2 = el('div', null, 'txt');
+        lines.forEach(function (ln, k) {
+          var n = Array.from(ln).reduce(function (a, ch) { return a + (ch.charCodeAt(0) > 0xFF ? 2 : 1); }, 0);
+          var d = el('div'); d.appendChild(el('span', (k + 1) + '. ', 'muted')); highlight(d, ln);
+          d.appendChild(el('span', '　' + n, n > lim ? 'badge warn' : 'muted'));
+          tx2.appendChild(d);
+        });
+        fd2.appendChild(tx2); s.appendChild(fd2); return;
+      }
       var fd = el('div', null, 'field'), lbl = el('div', null, 'lbl');
       lbl.appendChild(el('span', f[0]));
       var b = el('button', '複製', 'small'); b.addEventListener('click', function () { copy(f[1]); }); lbl.appendChild(b);

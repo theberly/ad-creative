@@ -4,8 +4,22 @@ const GEN_FORMATS = {
   'Meta 廣告': {
     fields: [['文案', null], ['標題', 40], ['說明', 40]],
     cta: ['瞭解詳情', '立即報名', '立即申請', '註冊', '傳送訊息', '立即購買', '索取優惠']
+  },
+  // 回應式搜尋廣告：一組＝15 則標題＋4 則說明，每則一行寫在同一格
+  'Google RSA': {
+    multi: [['標題', 15, 30], ['說明', 4, 90]]
   }
 };
+// Google 廣告政策常見退件：標題不能有驚嘆號、不能用表情符號、不能重複標點
+function googleWarn_(o) {
+  const w = [];
+  if (/[!！]/.test(o['標題'])) w.push('Google：標題不可有驚嘆號');
+  if (/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(o['標題'] + o['說明'])) w.push('Google：不可用表情符號');
+  if (/([!?！？。，,.])\1/.test(o['標題'] + o['說明'])) w.push('Google：標點不可重複');
+  const hs = o['標題'].split('\n');
+  if (hs.some(function (x, i) { return x && hs.indexOf(x) !== i; })) w.push('Google：標題有重複');
+  return w;
+}
 const GEN_RISKY = ['第一', '100%', '百分百', '保證', '最強', '最好', '最便宜', '最有效', '唯一', '根治', '零風險', '永久有效'];
 const GEN_FACT_WORDS = ['補助', '審核', '資格', '證書', '名額', '限額', '免費', '折扣', '優惠', '截止', '倒數'];
 const GEN_MAX_REFS = 8;
@@ -65,11 +79,12 @@ function generate_(name, apply, onlyRow) {
     const act = col(r, '活動名稱');
     const inputs = Object.keys(set).map(function (k) { return set[k]; }).concat(r).join('\n');
 
-    const refs = ref.rows.filter(function (x) { return x[iC] && (!col(r, '平台') || x[iPf] === col(r, '平台') || x[iPf] === '共用'); })
-      .map(function (x) { return { x: x, s: (x[iType] === '成效好' ? 3 : 0) + (act && iAct >= 0 && x[iAct].indexOf(act) >= 0 ? 2 : 0) + (x[iType] === '客戶提供' ? 1 : 0) }; })
+    const pf = col(r, '平台');
+    const refs = ref.rows.filter(function (x) { return x[iC]; })
+      .map(function (x) { return { x: x, s: (x[iType] === '成效好' ? 3 : 0) + (act && iAct >= 0 && x[iAct].indexOf(act) >= 0 ? 2 : 0) + (x[iType] === '客戶提供' ? 1 : 0) + (!pf || x[iPf] === pf || x[iPf] === '共用' ? 2 : 0) }; })
       .sort(function (a, b) { return b.s - a.s; }).slice(0, GEN_MAX_REFS).map(function (o) { return o.x; });
 
-    const fieldSpec = spec.fields.map(function (f) { return '「' + f[0] + '」' + (f[1] ? '（上限 ' + f[1] + ' 半形字元，中文與 emoji 算 2）' : ''); }).join('、') + '、「CTA」（只能從這些選一個：' + spec.cta.join('、') + '）';
+    const fieldSpec = spec.multi ? spec.multi.map(function (f) { return f[1] + ' 則「' + f[0] + '」（每則上限 ' + f[2] + ' 半形字元，中文算 2，也就是約 ' + Math.floor(f[2] / 2) + ' 個中文字）'; }).join('、') : spec.fields.map(function (f) { return '「' + f[0] + '」' + (f[1] ? '（上限 ' + f[1] + ' 半形字元，中文與 emoji 算 2）' : ''); }).join('、') + '、「CTA」（只能從這些選一個：' + spec.cta.join('、') + '）';
     const prompt = [
       '請為以下需求寫 ' + n + ' 組 ' + fmt + ' 文案，每組包含：' + fieldSpec + '。',
       '',
@@ -92,14 +107,17 @@ function generate_(name, apply, onlyRow) {
       '',
       '【寫作規則】',
       '1. 繁體中文、台灣用語。',
-      '2. 文案：前三行要抓住注意力；中段用 3 個重點條列；分段之間空一行；結尾一句行動呼籲。',
+      spec.multi ? '2. 這是 Google 回應式搜尋廣告：Google 會任意挑 3 則標題和 2 則說明組合，所以每則都要能單獨成立、不能接續上一則；標題之間不可重複或只差一兩字；切角要分散（品牌名 2～3 則、賣點、優惠或價格、適合誰、行動呼籲各幾則）；參考文案若是 Meta 的長文，只取它的賣點和用字，不要照長文結構寫。標題不可用驚嘆號，標題與說明都不可用表情符號、不可重複標點。說明要是完整句子，可以帶行動呼籲。'
+        : '2. 文案：前三行要抓住注意力；中段用 3 個重點條列；分段之間空一行；結尾一句行動呼籲。',
       '3. 不可出現禁用字詞，也不可用誇大或保證式用語（例如：第一、100%、保證、最有效）。',
       '4. 不要寫網址或「點連結」之類的字。',
       '5. 只能使用【客戶設定】與【這次的需求】裡寫到的事實（價格、日期、名額、資格、補助、審核、證書、課程內容、數字）。參考文案裡的事實不可沿用，只學寫法。',
       '6. 需要但沒提供的事實，寫成【待確認：項目】，例如【待確認：課程內容】，不要自己補。',
       '7. ' + n + ' 組的切角要不同。',
       '',
-      '只回傳 JSON，格式：{"sets":[{' + spec.fields.map(function (f) { return '"' + f[0] + '":"…"'; }).join(',') + ',"CTA":"…"}]}'
+      spec.multi ? '8. 每則一定要在字數上限內，寧可短。' : '',
+      '只回傳 JSON，格式：' + (spec.multi ? '{"sets":[{' + spec.multi.map(function (f) { return '"' + f[0] + '":["…"]'; }).join(',') + '}]}'
+        : '{"sets":[{' + spec.fields.map(function (f) { return '"' + f[0] + '":"…"'; }).join(',') + ',"CTA":"…"}]}')
     ].join('\n');
 
     Logger.log(tag + '第 ' + t.row + ' 列｜' + act + '｜' + fmt + '｜' + n + ' 組｜參考 ' + refs.length + ' 則（成效好 ' + refs.filter(function (x) { return x[iType] === '成效好'; }).length + '）｜提示 ' + prompt.length + ' 字');
@@ -115,24 +133,36 @@ function generate_(name, apply, onlyRow) {
     sets.slice(0, n).forEach(function (st, si) {
       const o = { '需求編號': id, '產出時間': now, '平台': col(r, '平台'), '格式': fmt, '序號': si + 1, '受眾': col(r, '受眾'), '到達網址': col(r, '到達網址'), '確認狀態': '待確認' };
       const lens = [], over = [];
-      spec.fields.forEach(function (f) {
-        o[f[0]] = String(st[f[0]] || '').trim();
-        const len = halfLen_(o[f[0]]);
-        lens.push(len);
-        if (f[1] && len > f[1]) over.push(f[0] + ' ' + len + '/' + f[1]);
-      });
-      o['CTA'] = spec.cta.indexOf(String(st['CTA'] || '').trim()) >= 0 ? String(st['CTA']).trim() : '瞭解詳情';
+      if (spec.multi) {
+        o['文案'] = '';
+        spec.multi.forEach(function (f) {
+          const items = (Array.isArray(st[f[0]]) ? st[f[0]] : String(st[f[0]] || '').split('\n')).map(function (x) { return String(x).trim(); }).filter(String);
+          items.forEach(function (x, k) { const len = halfLen_(x); if (len > f[2]) over.push(f[0] + (k + 1) + ' ' + len + '/' + f[2]); });
+          o[f[0]] = items.join('\n');
+          lens.push(f[0] + ' ' + items.length + '/' + f[1] + ' 則，最長 ' + Math.max.apply(null, items.map(halfLen_).concat([0])));
+        });
+        o['CTA'] = '';
+      } else {
+        spec.fields.forEach(function (f) {
+          o[f[0]] = String(st[f[0]] || '').trim();
+          const len = halfLen_(o[f[0]]);
+          lens.push(len);
+          if (f[1] && len > f[1]) over.push(f[0] + ' ' + len + '/' + f[1]);
+        });
+        o['CTA'] = spec.cta.indexOf(String(st['CTA'] || '').trim()) >= 0 ? String(st['CTA']).trim() : '瞭解詳情';
+      }
       o['字數（文案／標題／說明）'] = lens.join('／');
       o['是否超限'] = over.join('、');
-      const all = spec.fields.map(function (f) { return o[f[0]]; }).join('\n');
+      const all = ['文案', '標題', '說明'].map(function (h) { return o[h] || ''; }).join('\n');
       const nums = (all.match(/\d+(?:\.\d+)?/g) || []).filter(function (x, i, a) { return a.indexOf(x) === i && inputs.indexOf(x) < 0; });
       o['審核警示'] = banned.filter(function (x) { return all.indexOf(x) >= 0; }).map(function (x) { return '禁用：' + x; })
         .concat(risky.filter(function (x) { return all.indexOf(x) >= 0; }).map(function (x) { return '誇大：' + x; }))
         .concat(GEN_FACT_WORDS.filter(function (x) { return all.indexOf(x) >= 0 && inputs.indexOf(x) < 0; }).map(function (x) { return '需確認：' + x; }))
         .concat(nums.map(function (x) { return '需確認數字：' + x; }))
-        .concat(all.indexOf('【待確認') >= 0 ? ['有待確認項目'] : []).join('、');
+        .concat(all.indexOf('【待確認') >= 0 ? ['有待確認項目'] : [])
+        .concat(spec.multi ? googleWarn_(o) : []).join('、');
       out.push(OUT.map(function (h) { return o[h] == null ? '' : o[h]; }));
-      Logger.log(tag + '第 ' + (si + 1) + ' 組｜字數 ' + o['字數（文案／標題／說明）'] + '｜CTA ' + o['CTA'] + (o['是否超限'] ? '｜超限：' + o['是否超限'] : '') + (o['審核警示'] ? '｜' + o['審核警示'] : '') +
+      Logger.log(tag + '第 ' + (si + 1) + ' 組｜字數 ' + o['字數（文案／標題／說明）'] + (o['CTA'] ? '｜CTA ' + o['CTA'] : '') + (o['是否超限'] ? '｜超限：' + o['是否超限'] : '') + (o['審核警示'] ? '｜' + o['審核警示'] : '') +
         '\n【文案】\n' + o['文案'] + '\n【標題】' + o['標題'] + '\n【說明】' + o['說明']);
     });
     if (apply) {
